@@ -1,0 +1,38 @@
+/* Highcharts built-in View in full screen */
+.sparc-common-chart:fullscreen {
+  width: 60vw !important;
+  height: 60vh !important;
+
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+
+  transform: translate(-50%, -50%) !important;
+
+  margin: 0 !important;
+
+  background: #fff !important;
+
+  border-radius: 8px !important;
+
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25) !important;
+
+  overflow: hidden !important;
+}
+
+/* Make Highcharts fill the 60% container */
+.sparc-common-chart:fullscreen .highcharts-container {
+  width: 100% !important;
+  height: 100% !important;
+}i
+
+/* Make the SVG use the available chart area */
+.sparc-common-chart:fullscreen .highcharts-root {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Background around the chart */
+.sparc-common-chart:fullscreen::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
