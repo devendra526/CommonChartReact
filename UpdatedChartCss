@@ -1,0 +1,89 @@
+return {
+    chart: {
+        ...CHART_INTERACTION_OPTIONS.chart,
+
+        type: SERIES_TYPE_OF_CHART[type],
+
+        height,
+
+        spacingTop: 8,
+
+        style: {
+            fontFamily: 'inherit',
+        },
+
+        events: {
+            fullscreenOpen: function (this: Highcharts.Chart) {
+                this.setTitle({
+                    text: title ?? '',
+                    align: 'left',
+                    style: {
+                        fontSize: '16px',
+                        fontWeight: '700',
+                    },
+                });
+
+                setTimeout(() => {
+                    this.reflow();
+                }, 0);
+            },
+
+            fullscreenClose: function (this: Highcharts.Chart) {
+                this.setTitle({
+                    text: undefined,
+                });
+
+                setTimeout(() => {
+                    this.reflow();
+                }, 0);
+            },
+        },
+    },
+
+    exporting: CHART_INTERACTION_OPTIONS.exporting,
+
+    credits: {
+        enabled: false,
+    },
+
+    accessibility: {
+        enabled: true,
+    },
+
+    title: {
+        text: undefined,
+    },
+
+    subtitle: {
+        text: subtitle ?? undefined,
+        align: 'left',
+    },
+
+    // ...rest of your existing options
+
+
+};
+
+
+.highcharts-container:fullscreen {
+    width: 60vw !important;
+    height: 60vh !important;
+
+    position: fixed !important;
+    left: 20vw !important;
+    top: 20vh !important;
+
+    margin: 0 !important;
+
+    background: #fff !important;
+
+    border-radius: 8px !important;
+
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.30) !important;
+
+    overflow: hidden !important;
+}
+
+.highcharts-container:fullscreen::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+}
