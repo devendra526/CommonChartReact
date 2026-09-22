@@ -1,0 +1,26 @@
+fullscreenOpen: function () {
+  const fullscreenElement = document.fullscreenElement as HTMLElement | null;
+
+  if (fullscreenElement) {
+    fullscreenElement.style.width = '60vw';
+    fullscreenElement.style.height = '60vh';
+    fullscreenElement.style.position = 'fixed';
+    fullscreenElement.style.left = '20vw';
+    fullscreenElement.style.top = '20vh';
+    fullscreenElement.style.right = 'auto';
+    fullscreenElement.style.bottom = 'auto';
+    fullscreenElement.style.margin = '0';
+    fullscreenElement.style.padding = '0';
+    fullscreenElement.style.background = '#fff';
+    fullscreenElement.style.borderRadius = '8px';
+    fullscreenElement.style.boxShadow =
+      '0 10px 40px rgba(0, 0, 0, 0.3)';
+    fullscreenElement.style.overflow = 'hidden';
+    fullscreenElement.style.boxSizing = 'border-box';
+  }
+
+  // Keep your existing title code here
+  this.setTitle({
+    text: title,
+  });
+},
