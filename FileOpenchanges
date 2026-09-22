@@ -1,0 +1,67 @@
+fullscreenOpen: (chart) => {
+    console.log('FULLSCREEN CHART:', chart);
+    console.log('CONTAINER:', chart.container);
+
+    const container = chart.container;
+
+    setTimeout(() => {
+        container.style.setProperty('width', '60vw', 'important');
+        container.style.setProperty('height', '60vh', 'important');
+
+        container.style.setProperty('position', 'fixed', 'important');
+        container.style.setProperty('left', '20vw', 'important');
+        container.style.setProperty('top', '20vh', 'important');
+
+        container.style.setProperty('margin', '0', 'important');
+
+        container.style.setProperty(
+            'background',
+            '#fff',
+            'important'
+        );
+
+        container.style.setProperty(
+            'border-radius',
+            '8px',
+            'important'
+        );
+
+        container.style.setProperty(
+            'box-shadow',
+            '0 10px 40px rgba(0,0,0,0.3)',
+            'important'
+        );
+
+        chart.reflow();
+    }, 100);
+
+    chart.setTitle({
+        text: title ?? '',
+        align: 'left',
+        style: {
+            fontSize: '16px',
+            fontWeight: '700'
+        }
+    });
+},
+fullscreenClose: (chart) => {
+    const container = chart.container;
+
+    container.style.removeProperty('width');
+    container.style.removeProperty('height');
+    container.style.removeProperty('position');
+    container.style.removeProperty('left');
+    container.style.removeProperty('top');
+    container.style.removeProperty('margin');
+    container.style.removeProperty('background');
+    container.style.removeProperty('border-radius');
+    container.style.removeProperty('box-shadow');
+
+    chart.setTitle({
+        text: undefined
+    });
+
+    setTimeout(() => {
+        chart.reflow();
+    }, 100);
+},
