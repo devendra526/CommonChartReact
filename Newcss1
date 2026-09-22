@@ -1,0 +1,42 @@
+.sparc-highcharts-renderer:fullscreen {
+  width: 60vw !important;
+  height: 60vh !important;
+
+  position: fixed !important;
+
+  top: 20vh !important;
+  left: 20vw !important;
+
+  right: auto !important;
+  bottom: auto !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  box-sizing: border-box !important;
+
+  background: #fff !important;
+
+  border-radius: 8px !important;
+
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+
+  overflow: hidden !important;
+
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.sparc-highcharts-renderer:fullscreen .highcharts-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.sparc-highcharts-renderer:fullscreen .highcharts-root {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.sparc-highcharts-renderer:fullscreen::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
