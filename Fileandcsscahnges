@@ -1,0 +1,78 @@
+fullscreenOpen: function (this: Highcharts.Chart) {
+    const chart = this;
+
+    setTimeout(() => {
+        const element =
+            document.fullscreenElement as HTMLElement | null;
+
+        if (!element) {
+            return;
+        }
+
+        fullscreenElementRef.current = element;
+
+        element.classList.add(
+            'sparc-chart-custom-fullscreen'
+        );
+
+        chart.setTitle({
+            text: title ?? '',
+            align: 'left',
+            style: {
+                fontSize: '16px',
+                fontWeight: '700'
+            }
+        });
+
+        chart.reflow();
+    }, 100);
+},
+
+fullscreenClose: function (this: Highcharts.Chart) {
+    const chart = this;
+
+    fullscreenElementRef.current?.classList.remove(
+        'sparc-chart-custom-fullscreen'
+    );
+
+    fullscreenElementRef.current = null;
+
+    chart.setTitle({
+        text: undefined
+    });
+
+    setTimeout(() => {
+        chart.reflow();
+    }, 100);
+},
+
+
+.sparc-chart-custom-fullscreen:fullscreen {
+    width: 60vw !important;
+    height: 60vh !important;
+
+    position: fixed !important;
+
+    left: 20vw !important;
+    top: 20vh !important;
+
+    margin: 0 !important;
+
+    background: #fff !important;
+
+    border-radius: 8px !important;
+
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+
+    overflow: hidden !important;
+}
+
+.sparc-chart-custom-fullscreen:fullscreen
+.highcharts-root {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.sparc-chart-custom-fullscreen:fullscreen::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+}
