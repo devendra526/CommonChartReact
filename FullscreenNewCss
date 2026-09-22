@@ -1,0 +1,53 @@
+/* =========================================================
+   Highcharts native View in full screen
+   The HighchartsReact container is the fullscreen element.
+   ========================================================= */
+
+.sparc-highcharts-renderer:fullscreen {
+    width: 60vw !important;
+    height: 60vh !important;
+
+    position: fixed !important;
+
+    top: 20vh !important;
+    left: 20vw !important;
+
+    right: auto !important;
+    bottom: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: #ffffff !important;
+
+    border-radius: 8px !important;
+
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.30) !important;
+
+    overflow: hidden !important;
+}
+
+/*
+ * Highcharts itself sits inside the React container.
+ */
+.sparc-highcharts-renderer:fullscreen
+.highcharts-container {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/*
+ * SVG should fill the 60% chart area.
+ */
+.sparc-highcharts-renderer:fullscreen
+.highcharts-root {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/*
+ * Dark background outside the chart.
+ */
+.sparc-highcharts-renderer:fullscreen::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+}
