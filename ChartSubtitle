@@ -1,0 +1,75 @@
+title={`
+  <span class="limit-chart-title">
+    ${LIMIT_DESCRIPTION_CHART_TITLE}
+  </span>
+  <span class="limit-chart-badge">
+    ${limit.limitId} — ${limit.limitName}
+  </span>
+`}
+
+title={
+  <>
+    <span>Exposure</span>
+    <span className="limit-chart-badge">
+      {limit.limitId} — {limit.limitName}
+    </span>
+  </>
+}
+.limit-chart-badge {
+  display: inline-block;
+  margin-left: 12px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  background: #1565d8;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+
+**********
+<div className="common-chart-heading">
+  {title && (
+    <span className="common-chart-heading-title">
+      {title}
+    </span>
+  )}
+
+  {subtitle && (
+    <span className="common-chart-heading-subtitle">
+      {subtitle}
+    </span>
+  )}
+</div>
+
+.common-chart-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.common-chart-heading-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #222;
+}
+
+.common-chart-heading-subtitle {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 4px 12px;
+
+  background: #1565d8;
+  color: #fff;
+
+  border-radius: 16px;
+
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+
+  white-space: nowrap;
+}
