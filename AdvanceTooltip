@@ -1,0 +1,95 @@
+tooltip: advancedTooltip
+  ? {
+      shared: true,
+      useHTML: true,
+      formatter: function () {
+        const points = this.points ?? [];
+
+        // Don't include the trend line in contribution total
+        const contributionPoints = points.filter(
+          (point) => point.series.type !== 'line'
+        );
+
+        const total = contributionPoints.reduce(
+          (sum, point) => sum + (typeof point.y === 'number' ? point.y : 0),
+          0
+        );
+
+        const rows = contributionPoints
+          .map((point) => {
+            const value = typeof point.y === 'number' ? point.y : 0;
+
+            const percentage =
+              total !== 0 ? (value / total) * 100 : 0;
+
+            return `
+              <tr>
+                <td>
+                  <span
+                    style="
+                      display:inline-block;
+                      width:8px;
+                      height:8px;
+                      border-radius:50%;
+                      background:${point.color};
+                      margin-right:6px;
+                    "
+                  ></span>
+                  ${point.series.name}
+                </td>
+
+                <td style="text-align:right;padding-left:18px;">
+                  ${Highcharts.numberFormat(value, valueDecimals ?? 2)}
+                </td>
+
+                <td style="text-align:right;padding-left:18px;">
+                  ${Highcharts.numberFormat(percentage, 1)}%
+                </td>
+              </tr>
+            `;
+          })
+          .join('');
+
+        return `
+          <div class="common-chart-tooltip">
+            <div class="common-chart-tooltip-title">
+              ${this.x}
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Risk Type</th>
+                  <th>Value</th>
+                  <th>% of Total</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                ${rows}
+              </tbody>
+
+              <tfoot>
+                <tr>
+                  <td><b>Total</b></td>
+                  <td style="text-align:right;">
+                    <b>${Highcharts.numberFormat(
+                      total,
+                      valueDecimals ?? 2
+                    )}</b>
+                  </td>
+                  <td style="text-align:right;">
+                    <b>100%</b>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        `;
+      },
+    }
+  : {
+      shared: true,
+      valueSuffix,
+      valueDecimals,
+    },
