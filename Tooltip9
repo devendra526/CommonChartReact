@@ -1,0 +1,85 @@
+/* ================================
+   Advanced Tooltip - Column Alignment
+   ================================ */
+
+.chart-tooltip-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Common cell spacing */
+.chart-tooltip-table th,
+.chart-tooltip-table td {
+  padding: 2px 6px;
+  box-sizing: border-box;
+}
+
+/* 1st column - Risk Type */
+.chart-tooltip-table th:nth-child(1),
+.chart-tooltip-table td:nth-child(1) {
+  width: 50%;
+  text-align: left;
+}
+
+/* 2nd column - Value */
+.chart-tooltip-table th:nth-child(2),
+.chart-tooltip-table td:nth-child(2) {
+  width: 25%;
+  text-align: right;
+}
+
+/* 3rd column - % of Total */
+.chart-tooltip-table th:nth-child(3),
+.chart-tooltip-table td:nth-child(3) {
+  width: 25%;
+  text-align: right;
+}
+
+/* Keep headings on one line */
+.chart-tooltip-table th {
+  white-space: nowrap;
+}
+
+/* Keep risk type + colored dot together */
+.chart-tooltip-name {
+  white-space: nowrap;
+}
+
+/* Colored series dot */
+.chart-tooltip-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+  margin-right: 7px;
+  vertical-align: middle;
+}
+
+/* Numeric columns */
+.chart-tooltip-table td:nth-child(2),
+.chart-tooltip-table td:nth-child(3) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Risk Type */
+.chart-tooltip-table th:nth-child(1),
+.chart-tooltip-table td:nth-child(1) {
+  width: 46%;
+  text-align: left;
+}
+
+/* Value */
+.chart-tooltip-table th:nth-child(2),
+.chart-tooltip-table td:nth-child(2) {
+  width: 24%;
+  text-align: right;
+}
+
+/* % of Total */
+.chart-tooltip-table th:nth-child(3),
+.chart-tooltip-table td:nth-child(3) {
+  width: 30%;
+  text-align: right;
+}
