@@ -1,0 +1,113 @@
+tooltipColumns?: {
+  categoryTitle?: string;
+  groups?: string[];
+};
+
+******
+<CommonChart
+  ...
+  tooltipColumns={{
+    categoryTitle: 'FS Type',
+    groups: ['MC', 'Hist'],
+  }}
+/>
+
+******
+const groups = tooltipColumns?.groups ?? [];
+
+const groupedRows = new Map<
+  string,
+  Record<string, number | undefined>
+>();
+
+contributionPoints.forEach((point) => {
+  const seriesName = point.series.name;
+
+  const group = groups.find((item) =>
+    seriesName.toLowerCase().startsWith(item.toLowerCase())
+  );
+
+  if (!group) return;
+
+  // "MC FXVG" -> "FXVG"
+  // "Hist FXVG" -> "FXVG"
+  const categoryName = seriesName
+    .substring(group.length)
+    .trim();
+
+  if (!groupedRows.has(categoryName)) {
+    groupedRows.set(categoryName, {});
+  }
+
+  groupedRows.get(categoryName)![group] = point.y ?? undefined;
+});
+
+***
+const groupedHtml = Array.from(groupedRows.entries())
+  .map(([category, values]) => `
+    <tr>
+      <td>${category}</td>
+
+      ${groups
+        .map(group => `
+          <td>
+            ${
+              values[group] !== undefined
+                ? Highcharts.numberFormat(
+                    values[group]!,
+                    valueDecimals ?? 1
+                  )
+                : '-'
+            }
+          </td>
+        `)
+        .join('')}
+    </tr>
+  `)
+  .join('');
+
+*****
+<table class="chart-tooltip-table">
+  <thead>
+    ${header}
+  </thead>
+
+  <tbody>
+    ${groupedHtml}
+  </tbody>
+</table>
+
+****
+.chart-tooltip-table {
+  width: auto;
+  min-width: 300px;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.chart-tooltip-table th,
+.chart-tooltip-table td {
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.chart-tooltip-table th:first-child,
+.chart-tooltip-table td:first-child {
+  text-align: left;
+  padding-left: 0;
+  padding-right: 24px;
+}
+
+.chart-tooltip-table th:not(:first-child),
+.chart-tooltip-table td:not(:first-child) {
+  text-align: right;
+  min-width: 60px;
+}
+
+.chart-tooltip-table th:last-child,
+.chart-tooltip-table td:last-child {
+  padding-right: 0;
+}
+
+****
+
