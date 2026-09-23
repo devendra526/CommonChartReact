@@ -1,0 +1,205 @@
+const categoryIndex = this.points?.[0]?.point.x;
+
+const date =
+  typeof categoryIndex === 'number'
+    ? this.points?.[0]?.series.xAxis.categories?.[categoryIndex]
+    : this.x;
+
+*************
+
+formatter: function () {
+  const points = this.points ?? [];
+
+  const categoryIndex = points[0]?.point.x;
+
+  const date =
+    typeof categoryIndex === 'number'
+      ? points[0]?.series.xAxis.categories?.[categoryIndex]
+      : this.x;
+
+  // Column/stack contributors only
+  const contributionPoints = points.filter(
+    (point) => point.series.type !== 'line'
+  );
+
+  // Trend line separately
+  const trendPoint = points.find(
+    (point) => point.series.type === 'line'
+  );
+
+  const total = contributionPoints.reduce(
+    (sum, point) =>
+      sum + (typeof point.y === 'number' ? point.y : 0),
+    0
+  );
+
+  const rows = contributionPoints
+    .map((point) => {
+      const value =
+        typeof point.y === 'number' ? point.y : 0;
+
+      const percentage =
+        total !== 0 ? (value / total) * 100 : 0;
+
+      return `
+        <tr>
+          <td class="chart-tooltip-name">
+            <span
+              class="chart-tooltip-dot"
+              style="background:${point.color}"
+            ></span>
+            ${point.series.name}
+          </td>
+
+          <td class="chart-tooltip-value">
+            ${Highcharts.numberFormat(
+              value,
+              valueDecimals ?? 1
+            )}
+          </td>
+
+          <td class="chart-tooltip-percent">
+            ${Highcharts.numberFormat(percentage, 1)}%
+          </td>
+        </tr>
+      `;
+    })
+    .join('');
+
+  return `
+    <div class="chart-tooltip">
+
+      <div class="chart-tooltip-date">
+        ${date ?? ''}
+      </div>
+
+      <table class="chart-tooltip-table">
+
+        <thead>
+          <tr>
+            <th>Risk Type</th>
+            <th>Value</th>
+            <th>% of Total</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${rows}
+        </tbody>
+
+        <tfoot>
+          <tr class="chart-tooltip-total">
+            <td>Total</td>
+
+            <td>
+              ${Highcharts.numberFormat(
+                total,
+                valueDecimals ?? 1
+              )}
+            </td>
+
+            <td>100%</td>
+          </tr>
+        </tfoot>
+
+      </table>
+
+      ${
+        trendPoint
+          ? `
+            <div class="chart-tooltip-trend">
+              <span>CSVaR Trend</span>
+
+              <strong>
+                ${Highcharts.numberFormat(
+                  trendPoint.y ?? 0,
+                  valueDecimals ?? 1
+                )}
+              </strong>
+            </div>
+          `
+          : ''
+      }
+
+    </div>
+  `;
+},
+
+************
+
+.chart-tooltip {
+  min-width: 300px;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #202124;
+}
+
+.chart-tooltip-date {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.chart-tooltip-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.chart-tooltip-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px 5px 0;
+}
+
+.chart-tooltip-table td {
+  padding: 2px 8px 2px 0;
+}
+
+.chart-tooltip-value,
+.chart-tooltip-percent {
+  text-align: right;
+}
+
+.chart-tooltip-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 7px;
+}
+
+.chart-tooltip-total td {
+  border-top: 1px solid #d9d9d9;
+  padding-top: 7px;
+  font-weight: 700;
+}
+
+.chart-tooltip-trend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid #d9d9d9;
+}
+
+******
+tooltip: {
+  shared: true,
+  useHTML: true,
+
+  backgroundColor: '#ffffff',
+  borderColor: '#d0d7de',
+  borderRadius: 8,
+  borderWidth: 1,
+
+  shadow: true,
+
+  padding: 8,
+
+  formatter: function () {
+    // above formatter
+  }
+}
