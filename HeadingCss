@@ -1,0 +1,36 @@
+title={
+  <div className="csvar-title">
+    <span className="csvar-title-main">
+      CSVaR ($MM)
+    </span>
+
+    <span className="csvar-title-divider">|</span>
+
+    <span className="csvar-title-description">
+      Trend by Stress VaR Type & FS Type
+    </span>
+  </div>
+}
+.csvar-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.csvar-title-main {
+  font-size: 20px;
+  font-weight: 700;
+  color: #202124;
+}
+
+.csvar-title-divider {
+  color: #8a8a8a;
+  font-weight: 400;
+}
+
+.csvar-title-description {
+  font-size: 16px;
+  font-weight: 500;
+  color: #404040;
+}
+
