@@ -1,0 +1,15 @@
+<thead>
+  <tr>
+    <th>
+      ${tooltipColumns?.categoryTitle ?? 'Risk Type'}
+    </th>
+
+    ${
+      tooltipColumns?.groups?.length
+        ? tooltipColumns.groups
+            .map((group) => `<th>${group}</th>`)
+            .join('')
+        : '<th>Value</th>'
+    }
+  </tr>
+</thead>
