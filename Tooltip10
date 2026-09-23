@@ -1,0 +1,165 @@
+/* =========================================
+   COMMON CHART - ADVANCED TOOLTIP
+   ========================================= */
+
+/* Main tooltip content */
+.chart-tooltip {
+  width: 360px;
+  box-sizing: border-box;
+  font-size: 12px;
+  color: #1f2937;
+}
+
+/* =========================================
+   DATE HEADER
+   ========================================= */
+
+.chart-tooltip-date {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+
+  padding: 8px 10px;
+  margin: -8px -8px 8px -8px;
+
+  background: #f6f8fa;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 8px 8px 0 0;
+}
+
+/* =========================================
+   TABLE
+   ========================================= */
+
+.chart-tooltip-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Common header + cell styling */
+.chart-tooltip-table th,
+.chart-tooltip-table td {
+  padding: 3px 6px;
+  box-sizing: border-box;
+  line-height: 1.2;
+}
+
+/* Header */
+.chart-tooltip-table th {
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+  white-space: nowrap;
+}
+
+/* Normal values */
+.chart-tooltip-table td {
+  font-size: 12px;
+  color: #1f2937;
+}
+
+/* =========================================
+   COLUMN 1 - RISK TYPE
+   ========================================= */
+
+.chart-tooltip-table th:nth-child(1),
+.chart-tooltip-table td:nth-child(1) {
+  width: 46%;
+  text-align: left;
+}
+
+/* =========================================
+   COLUMN 2 - VALUE
+   ========================================= */
+
+.chart-tooltip-table th:nth-child(2),
+.chart-tooltip-table td:nth-child(2) {
+  width: 24%;
+  text-align: right;
+}
+
+/* =========================================
+   COLUMN 3 - % OF TOTAL
+   ========================================= */
+
+.chart-tooltip-table th:nth-child(3),
+.chart-tooltip-table td:nth-child(3) {
+  width: 30%;
+  text-align: right;
+}
+
+/* Makes numbers line up more cleanly */
+.chart-tooltip-table td:nth-child(2),
+.chart-tooltip-table td:nth-child(3) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================
+   RISK TYPE + COLORED DOT
+   ========================================= */
+
+.chart-tooltip-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chart-tooltip-dot {
+  display: inline-block;
+
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+
+  margin-right: 7px;
+
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+/* =========================================
+   TOTAL ROW
+   ========================================= */
+
+.chart-tooltip-total td {
+  padding-top: 7px;
+  padding-bottom: 7px;
+
+  font-weight: 700;
+  color: #111827;
+
+  background: #f8fafc;
+
+  border-top: 1px solid #d1d5db;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Keep Total numeric values aligned */
+.chart-tooltip-total td:nth-child(2),
+.chart-tooltip-total td:nth-child(3) {
+  text-align: right;
+}
+
+/* =========================================
+   TREND SECTION
+   ========================================= */
+
+.chart-tooltip-trend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 7px 6px 3px 6px;
+
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Trend value */
+.chart-tooltip-trend strong {
+  font-weight: 700;
+  color: #111827;
+  font-variant-numeric: tabular-nums;
+}
