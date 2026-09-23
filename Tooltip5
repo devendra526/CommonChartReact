@@ -1,0 +1,55 @@
+return `
+  <div class="chart-tooltip">
+
+    <div class="chart-tooltip-date">
+      ${date ?? ''}
+    </div>
+
+    <table class="chart-tooltip-table">
+
+      <thead>
+        <tr>
+          <th>Risk Type</th>
+          <th>Value</th>
+          <th>% of Total</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        ${rows}
+        ${moreRow}
+      </tbody>
+
+      <tfoot>
+        <tr class="chart-tooltip-total">
+          <td>Total</td>
+          <td>
+            ${Highcharts.numberFormat(
+              total,
+              valueDecimals ?? 1
+            )}
+          </td>
+          <td>100%</td>
+        </tr>
+      </tfoot>
+
+    </table>
+
+    ${
+      trendPoint
+        ? `
+          <div class="chart-tooltip-trend">
+            <span>CSVaR Trend</span>
+            <strong>
+              ${Highcharts.numberFormat(
+                trendPoint.y ?? 0,
+                valueDecimals ?? 1
+              )}
+            </strong>
+          </div>
+        `
+        : ''
+    }
+
+  </div>
+`;
