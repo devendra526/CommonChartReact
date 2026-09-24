@@ -1,0 +1,25 @@
+tooltipConfig: toTooltipConfig({
+  mode: 'table',
+  categoryLabel: 'FS Type',
+
+  columns: [
+    {
+      key: 'mc',
+      label: 'MC ($MM)',
+      seriesPrefix: 'MC ',
+    },
+    {
+      key: 'hist',
+      label: 'Hist ($MM)',
+      seriesPrefix: 'Hist ',
+    },
+  ],
+
+  removeSeriesPrefixes: ['MC ', 'Hist '],
+
+  footerSeriesContains: 'cvar trend',
+
+  valueDecimals: 1,
+
+  sortDescending: true,
+}),
