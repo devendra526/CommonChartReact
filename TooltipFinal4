@@ -1,0 +1,55 @@
+const toTooltipConfig = (
+  config?: ApiTooltipConfig
+): TooltipConfig | undefined => {
+  if (!config) {
+    return undefined;
+  }
+
+  return {
+    mode: config.mode ?? 'table',
+
+    categoryLabel: config.categoryLabel ?? 'Category',
+
+    columns: config.columns ?? [],
+
+    removeSeriesPrefixes:
+      config.removeSeriesPrefixes ?? [],
+
+    sortDescending:
+      config.sortDescending ?? false,
+
+    valueDecimals:
+      config.valueDecimals ?? 1,
+
+    footerSeriesMatcher: config.footerSeriesContains?.length
+      ? (seriesName: string) => {
+          const normalizedSeriesName = seriesName.toLowerCase();
+
+          return config.footerSeriesContains!.some((text) =>
+            normalizedSeriesName.includes(text.toLowerCase())
+          );
+        }
+      : undefined,
+  };
+};
+
+**********
+"tooltipConfig": {
+  "mode": "table",
+  "categoryLabel": "FS Type",
+  "columns": [
+    {
+      "key": "mc",
+      "label": "MC ($MM)",
+      "seriesPrefix": "MC "
+    }
+  ],
+  "removeSeriesPrefixes": [
+    "MC "
+  ],
+  "footerSeriesContains": [
+    "cvar trend"
+  ],
+  "sortDescending": true,
+  "valueDecimals": 1
+}
