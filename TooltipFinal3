@@ -1,0 +1,974 @@
+Yes. I would refactor it now rather than keep adding chart-specific conditions inside CommonChart.
+
+The cleaner architecture is:
+
+CommonChart should know nothing about MC, Hist, FS Type, CVaR, etc. It should only receive a tooltip configuration describing how series should be displayed. A separate generic utility builds the tooltip.
+
+This also solves your future case where another stacked chart should not strip MC/Hist.
+
+I suggest these 3 files:
+
+CommonChart/
+├── CommonChart.tsx
+├── CommonChart.css
+└── commonChartTooltip.ts
+
+You will add one optional prop:
+
+tooltipConfig={...}
+
+If you don’t send it, the chart can use the normal Highcharts tooltip.
+
+⸻
+
+1. commonChartTooltip.ts — NEW FILE
+
+Create this file beside CommonChart.tsx.
+
+import Highcharts from 'highcharts';
+/**
+ * Defines one value column in the tooltip.
+ *
+ * Example:
+ * {
+ *   key: 'mc',
+ *   label: 'MC',
+ *   seriesPrefix: 'MC '
+ * }
+ */
+export interface TooltipValueColumn {
+  key: string;
+  label: string;
+  /**
+   * Used to decide which series belongs to this column.
+   *
+   * Example:
+   * "MC FXVG" -> MC column
+   */
+  seriesPrefix?: string;
+  /**
+   * Optional custom matcher.
+   *
+   * Use this when prefix matching is not enough.
+   */
+  matchSeries?: (seriesName: string) => boolean;
+}
+/**
+ * Configuration passed by a chart to CommonChart.
+ */
+export interface CommonChartTooltipConfig {
+  /**
+   * table:
+   *
+   * FS Type | MC | Hist
+   *
+   * list:
+   *
+   * MC VaR       117.51
+   * MC SVaR      170.38
+   */
+  mode?: 'table' | 'list';
+  /**
+   * First column heading.
+   *
+   * Example:
+   * FS Type
+   * Risk Type
+   * Desk
+   * Region
+   */
+  categoryLabel?: string;
+  /**
+   * Value columns.
+   */
+  columns?: TooltipValueColumn[];
+  /**
+   * Removes something from the beginning of
+   * the series name before displaying it.
+   *
+   * Example:
+   *
+   * ["MC ", "Hist "]
+   *
+   * MC FXVG   -> FXVG
+   * Hist FXVG -> FXVG
+   *
+   * Leave undefined if you DON'T want anything removed.
+   */
+  removeSeriesPrefixes?: string[];
+  /**
+   * Series that should be displayed separately
+   * below the main table.
+   *
+   * Example:
+   *
+   * MC CVaR Trend
+   * Hist CVaR Trend
+   */
+  footerSeriesMatcher?: (seriesName: string) => boolean;
+  /**
+   * Number of decimals.
+   */
+  valueDecimals?: number;
+  /**
+   * Sort rows by their values.
+   */
+  sortDescending?: boolean;
+  /**
+   * Optional formatter for displayed values.
+   */
+  formatValue?: (
+    value: number,
+    seriesName: string
+  ) => string;
+}
+/**
+ * Internal grouped row.
+ */
+interface TooltipGroupedRow {
+  name: string;
+  color: string;
+  values: Record<string, number | undefined>;
+}
+/**
+ * Safely gets point color.
+ */
+function getPointColor(
+  point: Highcharts.Point
+): string {
+  if (typeof point.color === 'string') {
+    return point.color;
+  }
+  if (typeof point.series.color === 'string') {
+    return point.series.color;
+  }
+  return '#666666';
+}
+/**
+ * Removes configured prefixes from the
+ * displayed series name.
+ */
+function getDisplayName(
+  seriesName: string,
+  prefixes?: string[]
+): string {
+  let result = seriesName.trim();
+  if (!prefixes?.length) {
+    return result;
+  }
+  prefixes.forEach((prefix) => {
+    if (
+      result
+        .toLowerCase()
+        .startsWith(prefix.toLowerCase())
+    ) {
+      result = result
+        .slice(prefix.length)
+        .trim();
+    }
+  });
+  return result;
+}
+/**
+ * Determines whether a series belongs to
+ * a configured tooltip column.
+ */
+function matchesColumn(
+  seriesName: string,
+  column: TooltipValueColumn
+): boolean {
+  if (column.matchSeries) {
+    return column.matchSeries(seriesName);
+  }
+  if (column.seriesPrefix) {
+    return seriesName
+      .toLowerCase()
+      .startsWith(
+        column.seriesPrefix.toLowerCase()
+      );
+  }
+  return true;
+}
+/**
+ * Value formatting.
+ */
+function formatTooltipValue(
+  value: number,
+  seriesName: string,
+  config: CommonChartTooltipConfig
+): string {
+  if (config.formatValue) {
+    return config.formatValue(
+      value,
+      seriesName
+    );
+  }
+  return Highcharts.numberFormat(
+    value,
+    config.valueDecimals ?? 1
+  );
+}
+/**
+ * Gets tooltip date/category.
+ */
+function getTooltipCategory(
+  context: Highcharts.TooltipFormatterContextObject,
+  points: Highcharts.Point[]
+): string | number {
+  const firstPoint = points[0];
+  if (!firstPoint) {
+    return '';
+  }
+  const categoryIndex = firstPoint.x;
+  if (typeof categoryIndex === 'number') {
+    const category =
+      firstPoint.series.xAxis.categories?.[
+        categoryIndex
+      ];
+    if (category !== undefined) {
+      return category;
+    }
+  }
+  return context.x ?? '';
+}
+/**
+ * Creates footer HTML.
+ *
+ * Generic — it doesn't know anything about
+ * CVaR or MC/Hist.
+ */
+function buildFooterHtml(
+  points: Highcharts.Point[],
+  config: CommonChartTooltipConfig
+): string {
+  if (!config.footerSeriesMatcher) {
+    return '';
+  }
+  const footerPoints = points.filter((point) =>
+    config.footerSeriesMatcher!(
+      point.series.name
+    )
+  );
+  if (!footerPoints.length) {
+    return '';
+  }
+  const rows = footerPoints
+    .map((point) => {
+      const value = point.y ?? 0;
+      return `
+        <div class="chart-tooltip-footer-row">
+          <span class="chart-tooltip-footer-name">
+            <span
+              class="chart-tooltip-line-marker"
+              style="background:${getPointColor(
+                point
+              )}"
+            ></span>
+            ${point.series.name}
+          </span>
+          <strong>
+            ${formatTooltipValue(
+              value,
+              point.series.name,
+              config
+            )}
+          </strong>
+        </div>
+      `;
+    })
+    .join('');
+  return `
+    <div class="chart-tooltip-footer">
+      ${rows}
+    </div>
+  `;
+}
+/**
+ * ---------------------------------------------------------
+ * LIST TOOLTIP
+ * ---------------------------------------------------------
+ *
+ * Useful for ordinary line charts:
+ *
+ * MC VaR        117.51
+ * MC SVaR       170.38
+ * Hist VaR      123.28
+ * Hist SVaR     175.47
+ */
+function buildListTooltip(
+  date: string | number,
+  points: Highcharts.Point[],
+  config: CommonChartTooltipConfig
+): string {
+  const rows = points
+    .map((point) => {
+      const value = point.y ?? 0;
+      return `
+        <div class="chart-tooltip-list-row">
+          <span class="chart-tooltip-list-name">
+            <span
+              class="chart-tooltip-dot"
+              style="background:${getPointColor(
+                point
+              )}"
+            ></span>
+            ${point.series.name}
+          </span>
+          <strong>
+            ${formatTooltipValue(
+              value,
+              point.series.name,
+              config
+            )}
+          </strong>
+        </div>
+      `;
+    })
+    .join('');
+  return `
+    <div class="chart-tooltip">
+      <div class="chart-tooltip-date">
+        ${date}
+      </div>
+      <div class="chart-tooltip-list">
+        ${rows}
+      </div>
+    </div>
+  `;
+}
+/**
+ * ---------------------------------------------------------
+ * TABLE TOOLTIP
+ * ---------------------------------------------------------
+ *
+ * Supports:
+ *
+ * FS Type | MC
+ *
+ * FS Type | Hist
+ *
+ * FS Type | MC | Hist
+ *
+ * Region | Actual | Limit | Forecast
+ *
+ * etc.
+ */
+function buildTableTooltip(
+  date: string | number,
+  points: Highcharts.Point[],
+  config: CommonChartTooltipConfig
+): string {
+  const columns =
+    config.columns?.length
+      ? config.columns
+      : [
+          {
+            key: 'value',
+            label: 'Value',
+          },
+        ];
+  /*
+   * Footer points are removed from the main
+   * table automatically.
+   */
+  const dataPoints =
+    config.footerSeriesMatcher
+      ? points.filter(
+          (point) =>
+            !config.footerSeriesMatcher!(
+              point.series.name
+            )
+        )
+      : points;
+  const groupedRows = new Map<
+    string,
+    TooltipGroupedRow
+  >();
+  dataPoints.forEach((point) => {
+    const seriesName = point.series.name;
+    const displayName = getDisplayName(
+      seriesName,
+      config.removeSeriesPrefixes
+    );
+    let row = groupedRows.get(displayName);
+    if (!row) {
+      row = {
+        name: displayName,
+        color: getPointColor(point),
+        values: {},
+      };
+      groupedRows.set(displayName, row);
+    }
+    /*
+     * Find which configured column this
+     * series belongs to.
+     */
+    const column = columns.find((item) =>
+      matchesColumn(seriesName, item)
+    );
+    if (column) {
+      row.values[column.key] =
+        point.y ?? 0;
+    }
+  });
+  let rows = Array.from(
+    groupedRows.values()
+  );
+  /*
+   * Optional sorting.
+   *
+   * Uses the highest available value in
+   * each row.
+   */
+  if (config.sortDescending) {
+    rows = rows.sort((a, b) => {
+      const aValues = Object.values(
+        a.values
+      ).filter(
+        (value): value is number =>
+          typeof value === 'number'
+      );
+      const bValues = Object.values(
+        b.values
+      ).filter(
+        (value): value is number =>
+          typeof value === 'number'
+      );
+      const aMax = aValues.length
+        ? Math.max(...aValues)
+        : 0;
+      const bMax = bValues.length
+        ? Math.max(...bValues)
+        : 0;
+      return bMax - aMax;
+    });
+  }
+  /*
+   * Dynamic table header.
+   */
+  const header = `
+    <tr>
+      <th>
+        ${config.categoryLabel ?? 'Series'}
+      </th>
+      ${columns
+        .map(
+          (column) =>
+            `<th>${column.label}</th>`
+        )
+        .join('')}
+    </tr>
+  `;
+  /*
+   * Dynamic rows.
+   */
+  const rowsHtml = rows
+    .map((row) => {
+      const valuesHtml = columns
+        .map((column) => {
+          const value =
+            row.values[column.key];
+          return `
+            <td class="chart-tooltip-number">
+              ${
+                value !== undefined
+                  ? formatTooltipValue(
+                      value,
+                      row.name,
+                      config
+                    )
+                  : '-'
+              }
+            </td>
+          `;
+        })
+        .join('');
+      return `
+        <tr>
+          <td class="chart-tooltip-name">
+            <span
+              class="chart-tooltip-dot"
+              style="background:${row.color}"
+            ></span>
+            <span>
+              ${row.name}
+            </span>
+          </td>
+          ${valuesHtml}
+        </tr>
+      `;
+    })
+    .join('');
+  const footerHtml = buildFooterHtml(
+    points,
+    config
+  );
+  return `
+    <div class="chart-tooltip">
+      <div class="chart-tooltip-date">
+        ${date}
+      </div>
+      <div class="chart-tooltip-content">
+        <table class="chart-tooltip-table">
+          <thead>
+            ${header}
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+        ${footerHtml}
+      </div>
+    </div>
+  `;
+}
+/**
+ * =========================================================
+ * PUBLIC FORMATTER
+ * =========================================================
+ *
+ * This is the ONLY function CommonChart needs.
+ */
+export function buildCommonChartTooltip(
+  context: Highcharts.TooltipFormatterContextObject,
+  config: CommonChartTooltipConfig
+): string {
+  const points = context.points ?? [];
+  if (!points.length) {
+    return '';
+  }
+  const date = getTooltipCategory(
+    context,
+    points
+  );
+  if (config.mode === 'table') {
+    return buildTableTooltip(
+      date,
+      points,
+      config
+    );
+  }
+  /*
+   * Default = list.
+   */
+  return buildListTooltip(
+    date,
+    points,
+    config
+  );
+}
+
+⸻
+
+2. CommonChart.tsx
+
+Now your CommonChart becomes much cleaner.
+
+At the top:
+
+import Highcharts from 'highcharts';
+import HighchartsReact from 'highcharts-react-official';
+import {
+  buildCommonChartTooltip,
+  CommonChartTooltipConfig,
+} from './commonChartTooltip';
+import './CommonChart.css';
+
+Add this to your existing CommonChartProps:
+
+export interface CommonChartProps {
+  // KEEP ALL YOUR EXISTING PROPS HERE
+  advancedTooltip?: boolean;
+  tooltipConfig?: CommonChartTooltipConfig;
+  valueDecimals?: number;
+}
+
+Then where you destructure props:
+
+export function CommonChart({
+  // KEEP YOUR EXISTING PROPS
+  advancedTooltip = false,
+  tooltipConfig,
+  valueDecimals = 1,
+}: CommonChartProps) {
+
+Now inside your existing:
+
+const options = useMemo<Highcharts.Options>(() => {
+
+the entire tooltip section becomes only this:
+
+tooltip:
+  advancedTooltip && tooltipConfig
+    ? {
+        shared: true,
+        useHTML: true,
+        outside: true,
+        backgroundColor: '#ffffff',
+        borderColor: '#d0d7de',
+        borderRadius: 8,
+        borderWidth: 1,
+        shadow: true,
+        padding: 0,
+        formatter: function () {
+          return buildCommonChartTooltip(
+            this,
+            {
+              ...tooltipConfig,
+              valueDecimals:
+                tooltipConfig.valueDecimals ??
+                valueDecimals,
+            }
+          );
+        },
+      }
+    : undefined,
+
+That’s all the tooltip logic that should remain inside CommonChart.tsx.
+
+No MC, Hist, CVaR, FS Type, line-only, or chart-specific conditions remain in CommonChart.
+
+Also make sure tooltipConfig is included in the dependency array of your useMemo.
+
+For example:
+
+}, [
+  // your existing dependencies
+  advancedTooltip,
+  tooltipConfig,
+  valueDecimals,
+]);
+
+⸻
+
+3. CommonChart.css — COMPLETE TOOLTIP CSS
+
+Replace the tooltip CSS with this:
+
+/* =========================================================
+   COMMON CHART TOOLTIP
+   ========================================================= */
+.chart-tooltip {
+  min-width: 230px;
+  max-width: 420px;
+  background: #ffffff;
+  border-top: 3px solid #1f5fbf;
+  border-radius: 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: #222222;
+  font-size: 13px;
+  line-height: 1.35;
+}
+/* =========================================================
+   DATE
+   ========================================================= */
+.chart-tooltip-date {
+  padding: 9px 12px 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #222222;
+  border-bottom: 1px solid #e3e6ea;
+}
+/* =========================================================
+   CONTENT
+   ========================================================= */
+.chart-tooltip-content {
+  padding: 7px 10px 8px;
+}
+/* =========================================================
+   TABLE
+   ========================================================= */
+.chart-tooltip-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  table-layout: auto;
+}
+/* =========================================================
+   TABLE HEADER
+   ========================================================= */
+.chart-tooltip-table th {
+  padding: 3px 6px 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333333;
+  white-space: nowrap;
+}
+.chart-tooltip-table th:first-child {
+  text-align: left;
+}
+.chart-tooltip-table th:not(:first-child) {
+  text-align: right;
+}
+/* =========================================================
+   TABLE CELLS
+   ========================================================= */
+.chart-tooltip-table td {
+  padding: 2px 6px;
+  font-size: 13px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+/* =========================================================
+   FIRST COLUMN
+   ========================================================= */
+.chart-tooltip-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  padding-right: 12px !important;
+}
+/* =========================================================
+   DYNAMIC NUMERIC COLUMNS
+   ========================================================= */
+.chart-tooltip-number {
+  text-align: right;
+  padding-left: 8px !important;
+  padding-right: 6px !important;
+  font-variant-numeric: tabular-nums;
+}
+/* =========================================================
+   SERIES DOT
+   ========================================================= */
+.chart-tooltip-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+}
+/* =========================================================
+   FOOTER / TREND SERIES
+   ========================================================= */
+.chart-tooltip-footer {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid #e3e6ea;
+}
+.chart-tooltip-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 3px 5px;
+  font-size: 13px;
+}
+.chart-tooltip-footer-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.chart-tooltip-footer-row strong {
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.chart-tooltip-line-marker {
+  display: inline-block;
+  width: 12px;
+  height: 2px;
+  min-width: 12px;
+}
+/* =========================================================
+   GENERIC LIST TOOLTIP
+   ========================================================= */
+.chart-tooltip-list {
+  padding: 7px 12px 9px;
+}
+.chart-tooltip-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 3px 0;
+}
+.chart-tooltip-list-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.chart-tooltip-list-row strong {
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+⸻
+
+4. Your CSVaR chart — Both
+
+Now the chart decides the formatting, not CommonChart.
+
+For your Both chart:
+
+<CommonChart
+  {...otherProps}
+  advancedTooltip
+  tooltipConfig={{
+    mode: 'table',
+    categoryLabel: 'FS Type',
+    columns: [
+      {
+        key: 'mc',
+        label: 'MC',
+        seriesPrefix: 'MC ',
+      },
+      {
+        key: 'hist',
+        label: 'Hist',
+        seriesPrefix: 'Hist ',
+      },
+    ],
+    removeSeriesPrefixes: [
+      'MC ',
+      'Hist ',
+    ],
+    footerSeriesMatcher: (seriesName) =>
+      seriesName
+        .toLowerCase()
+        .includes('cvar trend'),
+    sortDescending: true,
+    valueDecimals: 1,
+  }}
+/>
+
+This produces:
+
+FS Type       MC      Hist
+FXST          10.3    47.8
+DTSY          31.3    46.6
+ISDL          44.7    39.8
+...
+MC CVaR Trend          491.3
+Hist CVaR Trend        xxx.x
+
+⸻
+
+5. CSVaR — MC only
+
+You don’t need a condition inside CommonChart.
+
+Send:
+
+<CommonChart
+  {...otherProps}
+  advancedTooltip
+  tooltipConfig={{
+    mode: 'table',
+    categoryLabel: 'FS Type',
+    columns: [
+      {
+        key: 'mc',
+        label: 'MC',
+        seriesPrefix: 'MC ',
+      },
+    ],
+    removeSeriesPrefixes: ['MC '],
+    footerSeriesMatcher: (seriesName) =>
+      seriesName
+        .toLowerCase()
+        .includes('cvar trend'),
+    sortDescending: true,
+    valueDecimals: 1,
+  }}
+/>
+
+Result:
+
+FS Type          MC
+FXST            10.3
+DTSY            31.3
+...
+
+For Hist, simply send the Hist column.
+
+⸻
+
+6. Your other line chart
+
+For the chart in your second screenshot:
+
+MC VaR
+MC SVaR
+Hist VaR
+Hist SVaR
+
+there is no special logic required.
+
+Use:
+
+<CommonChart
+  {...otherProps}
+  advancedTooltip
+  tooltipConfig={{
+    mode: 'list',
+    valueDecimals: 2,
+  }}
+/>
+
+Result:
+
+2026-08-21
+● MC VaR        117.51
+● MC SVaR       170.38
+● Hist VaR      123.28
+● Hist SVaR     175.47
+
+⸻
+
+7. Future stacked chart with completely different requirements
+
+This is the main reason I prefer this design.
+
+Suppose later you have:
+
+Actual EQDL
+Limit EQDL
+Forecast EQDL
+Actual FXVG
+Limit FXVG
+Forecast FXVG
+
+You don’t touch CommonChart.tsx or commonChartTooltip.ts.
+
+Just configure:
+
+tooltipConfig={{
+  mode: 'table',
+  categoryLabel: 'Risk Type',
+  columns: [
+    {
+      key: 'actual',
+      label: 'Actual',
+      seriesPrefix: 'Actual ',
+    },
+    {
+      key: 'limit',
+      label: 'Limit',
+      seriesPrefix: 'Limit ',
+    },
+    {
+      key: 'forecast',
+      label: 'Forecast',
+      seriesPrefix: 'Forecast ',
+    },
+  ],
+  removeSeriesPrefixes: [
+    'Actual ',
+    'Limit ',
+    'Forecast ',
+  ],
+  valueDecimals: 2,
+}}
+
+And if another chart should keep its complete series names, simply don’t send:
+
+removeSeriesPrefixes
+
+That’s the key architectural improvement: CommonChart renders the tooltip; the caller describes its structure. You won’t need to keep adding if MC, if Hist, if CVaR, if line chart, etc. to your shared component.
