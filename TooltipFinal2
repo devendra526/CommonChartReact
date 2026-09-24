@@ -1,0 +1,826 @@
+tooltip: advancedTooltip
+  ? {
+      shared: true,
+      useHTML: true,
+      outside: true,
+      backgroundColor: '#ffffff',
+      borderColor: '#d0d7de',
+      borderRadius: 8,
+      borderWidth: 1,
+      shadow: true,
+      padding: 0,
+
+      formatter: function () {
+        const points = this.points ?? [];
+
+        if (!points.length) {
+          return '';
+        }
+
+        /*
+         * Get date/category
+         */
+        const categoryIndex = points[0]?.x;
+
+        const date =
+          typeof categoryIndex === 'number'
+            ? points[0]?.series.xAxis.categories?.[categoryIndex] ??
+              this.x
+            : this.x;
+
+        /*
+         * ----------------------------------------------------
+         * CASE 1:
+         * LINE-ONLY CHART
+         *
+         * Example:
+         * MC VaR
+         * MC SVaR
+         * Hist VaR
+         * Hist SVaR
+         * ----------------------------------------------------
+         */
+        const isLineOnly =
+          points.length > 0 &&
+          points.every((point) => point.series.type === 'line');
+
+        if (isLineOnly) {
+          const lineRows = points
+            .map((point) => {
+              const color =
+                typeof point.color === 'string'
+                  ? point.color
+                  : typeof point.series.color === 'string'
+                    ? point.series.color
+                    : '#666666';
+
+              return `
+                <div class="chart-tooltip-line-row">
+
+                  <span class="chart-tooltip-line-name">
+
+                    <span
+                      class="chart-tooltip-dot"
+                      style="background:${color}"
+                    ></span>
+
+                    ${point.series.name}
+
+                  </span>
+
+                  <strong class="chart-tooltip-line-value">
+
+                    ${Highcharts.numberFormat(
+                      point.y ?? 0,
+                      valueDecimals ?? 2
+                    )}
+
+                  </strong>
+
+                </div>
+              `;
+            })
+            .join('');
+
+          return `
+            <div class="chart-tooltip chart-tooltip-line-only">
+
+              <div class="chart-tooltip-date">
+                ${date ?? ''}
+              </div>
+
+              <div class="chart-tooltip-line-list">
+                ${lineRows}
+              </div>
+
+            </div>
+          `;
+        }
+
+        /*
+         * ----------------------------------------------------
+         * CASE 2:
+         * STACKED / COLUMN CHART
+         * ----------------------------------------------------
+         */
+
+        /*
+         * Separate column points from trend lines
+         */
+        const contributionPoints = points.filter(
+          (point) => point.series.type !== 'line'
+        );
+
+        const trendPoints = points.filter(
+          (point) => point.series.type === 'line'
+        );
+
+        /*
+         * Detect MC / Hist from series names
+         */
+        const hasMC = contributionPoints.some((point) =>
+          point.series.name
+            .trim()
+            .toLowerCase()
+            .startsWith('mc ')
+        );
+
+        const hasHist = contributionPoints.some((point) =>
+          point.series.name
+            .trim()
+            .toLowerCase()
+            .startsWith('hist ')
+        );
+
+        const isBoth = hasMC && hasHist;
+
+        /*
+         * Remove MC / Hist prefix.
+         *
+         * MC FXVG   -> FXVG
+         * Hist FXVG -> FXVG
+         */
+        const getFsType = (seriesName: string) =>
+          seriesName
+            .replace(/^MC\s+/i, '')
+            .replace(/^Hist\s+/i, '')
+            .trim();
+
+        /*
+         * ----------------------------------------------------
+         * BOTH MODE
+         *
+         * FS Type | MC | Hist
+         * ----------------------------------------------------
+         */
+        if (isBoth) {
+          type GroupedValue = {
+            fsType: string;
+            mc?: number;
+            hist?: number;
+            color?: string;
+          };
+
+          const grouped = new Map<string, GroupedValue>();
+
+          contributionPoints.forEach((point) => {
+            const seriesName = point.series.name.trim();
+
+            const fsType = getFsType(seriesName);
+
+            const existing =
+              grouped.get(fsType) ?? {
+                fsType,
+              };
+
+            if (
+              seriesName
+                .toLowerCase()
+                .startsWith('mc ')
+            ) {
+              existing.mc = point.y ?? 0;
+
+              if (!existing.color) {
+                existing.color =
+                  typeof point.color === 'string'
+                    ? point.color
+                    : typeof point.series.color === 'string'
+                      ? point.series.color
+                      : '#666666';
+              }
+            }
+
+            if (
+              seriesName
+                .toLowerCase()
+                .startsWith('hist ')
+            ) {
+              existing.hist = point.y ?? 0;
+
+              if (!existing.color) {
+                existing.color =
+                  typeof point.color === 'string'
+                    ? point.color
+                    : typeof point.series.color === 'string'
+                      ? point.series.color
+                      : '#666666';
+              }
+            }
+
+            grouped.set(fsType, existing);
+          });
+
+          /*
+           * Sort using highest available value
+           */
+          const groupedValues = Array.from(
+            grouped.values()
+          ).sort((a, b) => {
+            const aValue = Math.max(
+              a.mc ?? Number.NEGATIVE_INFINITY,
+              a.hist ?? Number.NEGATIVE_INFINITY
+            );
+
+            const bValue = Math.max(
+              b.mc ?? Number.NEGATIVE_INFINITY,
+              b.hist ?? Number.NEGATIVE_INFINITY
+            );
+
+            return bValue - aValue;
+          });
+
+          const groupedHtml = groupedValues
+            .map((item) => {
+              return `
+                <tr>
+
+                  <td class="chart-tooltip-name">
+
+                    <span
+                      class="chart-tooltip-dot"
+                      style="background:${
+                        item.color ?? '#666666'
+                      }"
+                    ></span>
+
+                    <span>
+                      ${item.fsType}
+                    </span>
+
+                  </td>
+
+                  <td class="chart-tooltip-number">
+                    ${
+                      item.mc !== undefined
+                        ? Highcharts.numberFormat(
+                            item.mc,
+                            valueDecimals ?? 1
+                          )
+                        : '-'
+                    }
+                  </td>
+
+                  <td class="chart-tooltip-number">
+                    ${
+                      item.hist !== undefined
+                        ? Highcharts.numberFormat(
+                            item.hist,
+                            valueDecimals ?? 1
+                          )
+                        : '-'
+                    }
+                  </td>
+
+                </tr>
+              `;
+            })
+            .join('');
+
+          /*
+           * IMPORTANT:
+           * There can be TWO trend lines:
+           *
+           * MC CVaR Trend
+           * Hist CVaR Trend
+           */
+          const trendHtml = trendPoints
+            .map((point) => {
+              const color =
+                typeof point.color === 'string'
+                  ? point.color
+                  : typeof point.series.color === 'string'
+                    ? point.series.color
+                    : '#666666';
+
+              return `
+                <div class="chart-tooltip-trend">
+
+                  <span class="chart-tooltip-trend-name">
+
+                    <span
+                      class="chart-tooltip-line-marker"
+                      style="background:${color}"
+                    ></span>
+
+                    ${point.series.name}
+
+                  </span>
+
+                  <strong>
+
+                    ${Highcharts.numberFormat(
+                      point.y ?? 0,
+                      valueDecimals ?? 1
+                    )}
+
+                  </strong>
+
+                </div>
+              `;
+            })
+            .join('');
+
+          return `
+            <div class="chart-tooltip">
+
+              <div class="chart-tooltip-date">
+                ${date ?? ''}
+              </div>
+
+              <div class="chart-tooltip-content">
+
+                <table class="chart-tooltip-table chart-tooltip-table-both">
+
+                  <thead>
+                    <tr>
+                      <th>FS Type</th>
+                      <th>MC</th>
+                      <th>Hist</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    ${groupedHtml}
+                  </tbody>
+
+                </table>
+
+                ${
+                  trendHtml
+                    ? `
+                      <div class="chart-tooltip-trends">
+                        ${trendHtml}
+                      </div>
+                    `
+                    : ''
+                }
+
+              </div>
+
+            </div>
+          `;
+        }
+
+        /*
+         * ----------------------------------------------------
+         * SINGLE MODE
+         *
+         * MC:
+         * FS Type | MC
+         *
+         * HIST:
+         * FS Type | Hist
+         * ----------------------------------------------------
+         */
+
+        const valueHeader = hasHist
+          ? 'Hist'
+          : hasMC
+            ? 'MC'
+            : 'Value';
+
+        const sortedPoints = [...contributionPoints].sort(
+          (a, b) => (b.y ?? 0) - (a.y ?? 0)
+        );
+
+        const rows = sortedPoints
+          .map((point) => {
+            const fsType = getFsType(
+              point.series.name
+            );
+
+            const color =
+              typeof point.color === 'string'
+                ? point.color
+                : typeof point.series.color === 'string'
+                  ? point.series.color
+                  : '#666666';
+
+            return `
+              <tr>
+
+                <td class="chart-tooltip-name">
+
+                  <span
+                    class="chart-tooltip-dot"
+                    style="background:${color}"
+                  ></span>
+
+                  <span>
+                    ${fsType}
+                  </span>
+
+                </td>
+
+                <td class="chart-tooltip-number">
+
+                  ${Highcharts.numberFormat(
+                    point.y ?? 0,
+                    valueDecimals ?? 1
+                  )}
+
+                </td>
+
+              </tr>
+            `;
+          })
+          .join('');
+
+        /*
+         * Trend rows for single mode.
+         *
+         * Normally there will be one, but using map()
+         * keeps CommonChart generic.
+         */
+        const trendHtml = trendPoints
+          .map((point) => {
+            const color =
+              typeof point.color === 'string'
+                ? point.color
+                : typeof point.series.color === 'string'
+                  ? point.series.color
+                  : '#666666';
+
+            return `
+              <div class="chart-tooltip-trend">
+
+                <span class="chart-tooltip-trend-name">
+
+                  <span
+                    class="chart-tooltip-line-marker"
+                    style="background:${color}"
+                  ></span>
+
+                  ${point.series.name}
+
+                </span>
+
+                <strong>
+
+                  ${Highcharts.numberFormat(
+                    point.y ?? 0,
+                    valueDecimals ?? 1
+                  )}
+
+                </strong>
+
+              </div>
+            `;
+          })
+          .join('');
+
+        return `
+          <div class="chart-tooltip">
+
+            <div class="chart-tooltip-date">
+              ${date ?? ''}
+            </div>
+
+            <div class="chart-tooltip-content">
+
+              <table class="chart-tooltip-table chart-tooltip-table-single">
+
+                <thead>
+                  <tr>
+                    <th>FS Type</th>
+                    <th>${valueHeader}</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  ${rows}
+                </tbody>
+
+              </table>
+
+              ${
+                trendHtml
+                  ? `
+                    <div class="chart-tooltip-trends">
+                      ${trendHtml}
+                    </div>
+                  `
+                  : ''
+              }
+
+            </div>
+
+          </div>
+        `;
+      },
+    }
+  : undefined,
+
+
+
+********
+/* =========================================================
+   COMMON CHART - ADVANCED TOOLTIP
+   ========================================================= */
+
+.chart-tooltip {
+  min-width: 260px;
+  max-width: 420px;
+
+  background: #ffffff;
+
+  /*
+   * Matches the blue top border used by dashboard cards
+   */
+  border-top: 3px solid #1f5fbf;
+
+  border-radius: 8px;
+
+  box-sizing: border-box;
+  overflow: hidden;
+
+  font-size: 13px;
+  line-height: 1.35;
+
+  color: #222222;
+}
+
+
+/* =========================================================
+   DATE
+   ========================================================= */
+
+.chart-tooltip-date {
+  padding: 9px 12px 8px;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  color: #222222;
+
+  border-bottom: 1px solid #e3e6ea;
+
+  background: #ffffff;
+}
+
+
+/* =========================================================
+   CONTENT
+   ========================================================= */
+
+.chart-tooltip-content {
+  padding: 7px 10px 8px;
+}
+
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.chart-tooltip-table {
+  width: 100%;
+
+  border-collapse: collapse;
+  border-spacing: 0;
+
+  table-layout: auto;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+   ========================================================= */
+
+.chart-tooltip-table th {
+  padding: 3px 5px 5px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  color: #333333;
+
+  white-space: nowrap;
+}
+
+
+/*
+ * First column left aligned
+ */
+.chart-tooltip-table th:first-child {
+  text-align: left;
+}
+
+
+/*
+ * Numeric columns right aligned
+ */
+.chart-tooltip-table th:not(:first-child) {
+  text-align: right;
+}
+
+
+/* =========================================================
+   TABLE BODY
+   ========================================================= */
+
+.chart-tooltip-table td {
+  padding: 2px 5px;
+
+  font-size: 13px;
+
+  vertical-align: middle;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   FS TYPE COLUMN
+   ========================================================= */
+
+.chart-tooltip-name {
+  text-align: left;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  padding-right: 12px !important;
+}
+
+
+/* =========================================================
+   VALUE COLUMNS
+   ========================================================= */
+
+.chart-tooltip-number {
+  text-align: right;
+
+  font-variant-numeric: tabular-nums;
+
+  padding-left: 8px !important;
+}
+
+
+/* =========================================================
+   REDUCE SPACE BETWEEN COLUMNS
+   ========================================================= */
+
+/*
+ * Single mode:
+ *
+ * FS Type | MC
+ * FS Type | Hist
+ */
+.chart-tooltip-table-single th:first-child,
+.chart-tooltip-table-single td:first-child {
+  padding-right: 14px;
+}
+
+.chart-tooltip-table-single th:last-child,
+.chart-tooltip-table-single td:last-child {
+  padding-left: 8px;
+}
+
+
+/*
+ * Both:
+ *
+ * FS Type | MC | Hist
+ */
+.chart-tooltip-table-both th:first-child,
+.chart-tooltip-table-both td:first-child {
+  padding-right: 12px;
+}
+
+.chart-tooltip-table-both th:nth-child(2),
+.chart-tooltip-table-both td:nth-child(2) {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.chart-tooltip-table-both th:nth-child(3),
+.chart-tooltip-table-both td:nth-child(3) {
+  padding-left: 8px;
+}
+
+
+/* =========================================================
+   COLORED SERIES DOT
+   ========================================================= */
+
+.chart-tooltip-dot {
+  display: inline-block;
+
+  width: 8px;
+  height: 8px;
+
+  min-width: 8px;
+
+  border-radius: 50%;
+}
+
+
+/* =========================================================
+   TREND SECTION
+   ========================================================= */
+
+.chart-tooltip-trends {
+  margin-top: 7px;
+  padding-top: 6px;
+
+  border-top: 1px solid #e3e6ea;
+}
+
+
+.chart-tooltip-trend {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  padding: 3px 5px;
+
+  font-size: 13px;
+}
+
+
+.chart-tooltip-trend-name {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  white-space: nowrap;
+}
+
+
+.chart-tooltip-trend strong {
+  text-align: right;
+
+  white-space: nowrap;
+
+  font-weight: 600;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+/*
+ * Small line indicator instead of a round dot
+ * for trend series.
+ */
+.chart-tooltip-line-marker {
+  display: inline-block;
+
+  width: 12px;
+  height: 2px;
+
+  min-width: 12px;
+}
+
+
+/* =========================================================
+   LINE-ONLY CHART
+   ========================================================= */
+
+.chart-tooltip-line-only {
+  min-width: 220px;
+}
+
+
+.chart-tooltip-line-list {
+  padding: 7px 12px 9px;
+}
+
+
+.chart-tooltip-line-row {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 3px 0;
+}
+
+
+.chart-tooltip-line-name {
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  white-space: nowrap;
+}
+
+
+.chart-tooltip-line-value {
+  text-align: right;
+
+  white-space: nowrap;
+
+  font-weight: 600;
+
+  font-variant-numeric: tabular-nums;
+}
