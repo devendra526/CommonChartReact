@@ -1,0 +1,778 @@
+tooltip: advancedTooltip
+  ? {
+      shared: true,
+      useHTML: true,
+      outside: true,
+
+      backgroundColor: '#ffffff',
+      borderColor: '#d0d7de',
+      borderRadius: 8,
+      borderWidth: 1,
+
+      shadow: true,
+      padding: 0,
+
+      formatter: function () {
+        const points = this.points ?? [];
+
+        if (!points.length) {
+          return '';
+        }
+
+        /* -------------------------------------------------------
+         * DATE
+         * ----------------------------------------------------- */
+
+        const categoryIndex = points[0]?.x;
+
+        const date =
+          typeof categoryIndex === 'number'
+            ? points[0]?.series.xAxis.categories?.[categoryIndex]
+            : this.x;
+
+        /* -------------------------------------------------------
+         * SEPARATE TREND SERIES
+         *
+         * Trend should NOT be part of the FS Type rows.
+         * ----------------------------------------------------- */
+
+        const trendPoint = points.find((point) => {
+          const seriesType = point.series.type;
+          const seriesName = point.series.name ?? '';
+
+          return (
+            seriesType === 'line' ||
+            seriesName.toLowerCase().includes('trend')
+          );
+        });
+
+        /* -------------------------------------------------------
+         * CONTRIBUTION SERIES
+         * ----------------------------------------------------- */
+
+        const contributionPoints = points.filter((point) => {
+          const seriesType = point.series.type;
+          const seriesName = point.series.name ?? '';
+
+          return (
+            seriesType !== 'line' &&
+            !seriesName.toLowerCase().includes('trend')
+          );
+        });
+
+        /* -------------------------------------------------------
+         * DETECT MC / HIST
+         *
+         * We intentionally DON'T depend on displayMode.
+         *
+         * Examples:
+         *
+         * MC FXDL
+         * MC CMDL
+         *
+         * Hist FXDL
+         * Hist CMDL
+         * ----------------------------------------------------- */
+
+        const hasMC = contributionPoints.some((point) =>
+          (point.series.name ?? '')
+            .trim()
+            .toLowerCase()
+            .startsWith('mc ')
+        );
+
+        const hasHist = contributionPoints.some((point) =>
+          (point.series.name ?? '')
+            .trim()
+            .toLowerCase()
+            .startsWith('hist ')
+        );
+
+        const isBoth = hasMC && hasHist;
+
+        /* -------------------------------------------------------
+         * NORMAL MODE HEADER
+         *
+         * MC only:
+         * FS Type | MC
+         *
+         * Hist only:
+         * FS Type | Hist
+         *
+         * Fallback:
+         * FS Type | Value
+         * ----------------------------------------------------- */
+
+        const singleValueHeader = hasMC
+          ? 'MC'
+          : hasHist
+            ? 'Hist'
+            : 'Value';
+
+        /* -------------------------------------------------------
+         * HEADER
+         * ----------------------------------------------------- */
+
+        const header = isBoth
+          ? `
+              <tr>
+                <th class="chart-tooltip-fstype">
+                  FS Type
+                </th>
+
+                <th class="chart-tooltip-number">
+                  MC
+                </th>
+
+                <th class="chart-tooltip-number">
+                  Hist
+                </th>
+              </tr>
+            `
+          : `
+              <tr>
+                <th class="chart-tooltip-fstype">
+                  FS Type
+                </th>
+
+                <th class="chart-tooltip-number">
+                  ${singleValueHeader}
+                </th>
+              </tr>
+            `;
+
+        /* =======================================================
+         * BOTH MODE
+         *
+         * Convert:
+         *
+         * MC FXDL
+         * Hist FXDL
+         *
+         * into:
+         *
+         * FXDL | MC value | Hist value
+         * ===================================================== */
+
+        if (isBoth) {
+          type GroupedValue = {
+            name: string;
+            mc?: number;
+            hist?: number;
+            color?: string;
+          };
+
+          const grouped = new Map<string, GroupedValue>();
+
+          contributionPoints.forEach((point) => {
+            const originalName = (point.series.name ?? '').trim();
+
+            const lowerName = originalName.toLowerCase();
+
+            const isMCSeries = lowerName.startsWith('mc ');
+
+            const isHistSeries = lowerName.startsWith('hist ');
+
+            /*
+             * Remove MC / Hist only for display in first column.
+             *
+             * MC FXDL   -> FXDL
+             * Hist FXDL -> FXDL
+             */
+
+            const cleanName = originalName
+              .replace(/^mc\s+/i, '')
+              .replace(/^hist\s+/i, '')
+              .trim();
+
+            if (!cleanName) {
+              return;
+            }
+
+            const existing = grouped.get(cleanName) ?? {
+              name: cleanName,
+            };
+
+            const value =
+              typeof point.y === 'number'
+                ? point.y
+                : undefined;
+
+            if (isMCSeries) {
+              existing.mc = value;
+
+              /*
+               * Prefer MC color for the shared marker.
+               */
+              if (!existing.color) {
+                existing.color = String(point.color);
+              }
+            }
+
+            if (isHistSeries) {
+              existing.hist = value;
+
+              /*
+               * If MC wasn't available, use Hist color.
+               */
+              if (!existing.color) {
+                existing.color = String(point.color);
+              }
+            }
+
+            grouped.set(cleanName, existing);
+          });
+
+          /* -----------------------------------------------------
+           * Convert Map -> Array
+           * --------------------------------------------------- */
+
+          const groupedValues = Array.from(grouped.values());
+
+          /* -----------------------------------------------------
+           * SORT
+           *
+           * Highest available value first.
+           *
+           * You can remove this .sort() if you want the exact
+           * original series order.
+           * --------------------------------------------------- */
+
+          groupedValues.sort((a, b) => {
+            const aValue = Math.max(
+              a.mc ?? Number.NEGATIVE_INFINITY,
+              a.hist ?? Number.NEGATIVE_INFINITY
+            );
+
+            const bValue = Math.max(
+              b.mc ?? Number.NEGATIVE_INFINITY,
+              b.hist ?? Number.NEGATIVE_INFINITY
+            );
+
+            return bValue - aValue;
+          });
+
+          /* -----------------------------------------------------
+           * CREATE BOTH-MODE ROWS
+           * --------------------------------------------------- */
+
+          const groupedHtml = groupedValues
+            .map((item) => {
+              const mcValue =
+                typeof item.mc === 'number'
+                  ? Highcharts.numberFormat(
+                      item.mc,
+                      valueDecimals ?? 1
+                    )
+                  : '-';
+
+              const histValue =
+                typeof item.hist === 'number'
+                  ? Highcharts.numberFormat(
+                      item.hist,
+                      valueDecimals ?? 1
+                    )
+                  : '-';
+
+              return `
+                <tr>
+                  <td class="chart-tooltip-fstype">
+                    <span
+                      class="chart-tooltip-marker"
+                      style="background:${item.color ?? '#666'}"
+                    ></span>
+
+                    <span class="chart-tooltip-name">
+                      ${item.name}
+                    </span>
+                  </td>
+
+                  <td class="chart-tooltip-number">
+                    ${mcValue}
+                  </td>
+
+                  <td class="chart-tooltip-number">
+                    ${histValue}
+                  </td>
+                </tr>
+              `;
+            })
+            .join('');
+
+          /* -----------------------------------------------------
+           * TREND
+           * --------------------------------------------------- */
+
+          const trendHtml = trendPoint
+            ? `
+                <div class="chart-tooltip-trend">
+                  <span>
+                    ${trendPoint.series.name ?? 'Trend'}
+                  </span>
+
+                  <strong>
+                    ${Highcharts.numberFormat(
+                      trendPoint.y ?? 0,
+                      valueDecimals ?? 1
+                    )}
+                  </strong>
+                </div>
+              `
+            : '';
+
+          /* -----------------------------------------------------
+           * RETURN BOTH TOOLTIP
+           * --------------------------------------------------- */
+
+          return `
+            <div class="chart-tooltip">
+
+              <div class="chart-tooltip-date">
+                ${date ?? ''}
+              </div>
+
+              <div class="chart-tooltip-body">
+
+                <table class="chart-tooltip-table chart-tooltip-table-both">
+
+                  <thead>
+                    ${header}
+                  </thead>
+
+                  <tbody>
+                    ${groupedHtml}
+                  </tbody>
+
+                </table>
+
+                ${trendHtml}
+
+              </div>
+
+            </div>
+          `;
+        }
+
+        /* =======================================================
+         * NORMAL MODE
+         *
+         * MC:
+         *
+         * FS Type | MC
+         *
+         * HIST:
+         *
+         * FS Type | Hist
+         * ===================================================== */
+
+        const rows = contributionPoints
+          .map((point) => {
+            const originalName = (point.series.name ?? '').trim();
+
+            /*
+             * Remove prefix if API/series happens to contain it.
+             *
+             * This keeps CommonChart defensive:
+             *
+             * MC FXDL -> FXDL
+             * Hist FXDL -> FXDL
+             */
+
+            const cleanName = originalName
+              .replace(/^mc\s+/i, '')
+              .replace(/^hist\s+/i, '')
+              .trim();
+
+            const value =
+              typeof point.y === 'number'
+                ? point.y
+                : 0;
+
+            return {
+              name: cleanName,
+              value,
+              color: String(point.color),
+            };
+          })
+
+          /*
+           * Highest value first.
+           *
+           * Remove sort if you want original legend order.
+           */
+
+          .sort((a, b) => b.value - a.value)
+
+          .map(
+            (item) => `
+              <tr>
+
+                <td class="chart-tooltip-fstype">
+
+                  <span
+                    class="chart-tooltip-marker"
+                    style="background:${item.color}"
+                  ></span>
+
+                  <span class="chart-tooltip-name">
+                    ${item.name}
+                  </span>
+
+                </td>
+
+                <td class="chart-tooltip-number">
+
+                  ${Highcharts.numberFormat(
+                    item.value,
+                    valueDecimals ?? 1
+                  )}
+
+                </td>
+
+              </tr>
+            `
+          )
+          .join('');
+
+        /* -------------------------------------------------------
+         * NORMAL TREND
+         * ----------------------------------------------------- */
+
+        const trendHtml = trendPoint
+          ? `
+              <div class="chart-tooltip-trend">
+
+                <span>
+                  ${trendPoint.series.name ?? 'Trend'}
+                </span>
+
+                <strong>
+                  ${Highcharts.numberFormat(
+                    trendPoint.y ?? 0,
+                    valueDecimals ?? 1
+                  )}
+                </strong>
+
+              </div>
+            `
+          : '';
+
+        /* -------------------------------------------------------
+         * RETURN NORMAL TOOLTIP
+         * ----------------------------------------------------- */
+
+        return `
+          <div class="chart-tooltip">
+
+            <div class="chart-tooltip-date">
+              ${date ?? ''}
+            </div>
+
+            <div class="chart-tooltip-body">
+
+              <table class="chart-tooltip-table chart-tooltip-table-single">
+
+                <thead>
+                  ${header}
+                </thead>
+
+                <tbody>
+                  ${rows}
+                </tbody>
+
+              </table>
+
+              ${trendHtml}
+
+            </div>
+
+          </div>
+        `;
+      },
+    }
+  : undefined,
+
+
+***********
+/* ============================================================
+   COMMON CHART - ADVANCED TOOLTIP
+   ============================================================ */
+
+.chart-tooltip {
+  min-width: 250px;
+  max-width: 380px;
+
+  background: #ffffff;
+
+  color: #172033;
+
+  font-size: 13px;
+  line-height: 1.25;
+
+  border-radius: 8px;
+
+  overflow: hidden;
+}
+
+
+/* ============================================================
+   DATE HEADER
+   ============================================================ */
+
+.chart-tooltip-date {
+  padding: 9px 10px;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  color: #172033;
+
+  background: #f6f7f9;
+
+  border-bottom: 1px solid #e3e7ed;
+}
+
+
+/* ============================================================
+   BODY
+   ============================================================ */
+
+.chart-tooltip-body {
+  padding: 7px 8px 6px;
+}
+
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+
+.chart-tooltip-table {
+  width: auto;
+
+  border-collapse: collapse;
+  border-spacing: 0;
+
+  table-layout: auto;
+}
+
+
+/* ============================================================
+   TABLE HEADER
+   ============================================================ */
+
+.chart-tooltip-table thead th {
+  padding-top: 3px;
+  padding-bottom: 5px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  color: #374151;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================
+   ALL CELLS
+   ============================================================ */
+
+.chart-tooltip-table th,
+.chart-tooltip-table td {
+  padding-top: 2px;
+  padding-bottom: 2px;
+
+  vertical-align: middle;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================
+   FS TYPE COLUMN
+
+   IMPORTANT:
+   This is intentionally smaller than before.
+
+   This reduces the large empty highlighted space between
+   FS Type and MC / Hist.
+   ============================================================ */
+
+.chart-tooltip-table .chart-tooltip-fstype {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+
+  padding-left: 4px;
+  padding-right: 8px;
+
+  text-align: left;
+}
+
+
+/* ============================================================
+   FS TYPE NAME
+   ============================================================ */
+
+.chart-tooltip-name {
+  vertical-align: middle;
+}
+
+
+/* ============================================================
+   COLOR MARKER
+   ============================================================ */
+
+.chart-tooltip-marker {
+  display: inline-block;
+
+  width: 8px;
+  height: 8px;
+
+  margin-right: 6px;
+
+  border-radius: 50%;
+
+  vertical-align: middle;
+
+  flex-shrink: 0;
+}
+
+
+/* ============================================================
+   NUMBER COLUMNS
+
+   Applies to:
+   MC
+   Hist
+   Value fallback
+   ============================================================ */
+
+.chart-tooltip-table .chart-tooltip-number {
+  width: 58px;
+  min-width: 58px;
+  max-width: 58px;
+
+  padding-left: 5px;
+  padding-right: 5px;
+
+  text-align: right;
+}
+
+
+/* ============================================================
+   SINGLE MODE
+
+   FS Type | MC
+
+   OR
+
+   FS Type | Hist
+   ============================================================ */
+
+.chart-tooltip-table-single {
+  min-width: 190px;
+}
+
+
+/* ============================================================
+   BOTH MODE
+
+   FS Type | MC | Hist
+   ============================================================ */
+
+.chart-tooltip-table-both {
+  min-width: 255px;
+}
+
+
+/* ============================================================
+   BOTH MODE - SLIGHTLY TIGHTER NUMBER COLUMNS
+   ============================================================ */
+
+.chart-tooltip-table-both .chart-tooltip-number {
+  width: 55px;
+  min-width: 55px;
+  max-width: 55px;
+
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+
+/* ============================================================
+   TREND SECTION
+   ============================================================ */
+
+.chart-tooltip-trend {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-top: 6px;
+
+  padding:
+    7px
+    5px
+    3px;
+
+  border-top: 1px solid #e3e7ed;
+
+  font-weight: 600;
+
+  color: #172033;
+}
+
+
+/* ============================================================
+   TREND VALUE
+   ============================================================ */
+
+.chart-tooltip-trend strong {
+  margin-left: auto;
+
+  text-align: right;
+
+  font-weight: 600;
+}
+
+
+/* ============================================================
+   HIGHCHARTS TOOLTIP OVERRIDES
+   ============================================================ */
+
+.highcharts-tooltip {
+  pointer-events: none;
+}
+
+
+/*
+ * Highcharts creates an SVG/HTML tooltip container.
+ * Keep our custom HTML clean.
+ */
+
+.highcharts-tooltip > span {
+  overflow: visible !important;
+}
+
+
+/* ============================================================
+   FULLSCREEN
+   ============================================================ */
+
+.highcharts-container.is-chart-fullscreen .chart-tooltip {
+  font-size: 14px;
+}
+
+.highcharts-container.is-chart-fullscreen
+  .chart-tooltip-date {
+  font-size: 16px;
+}
+
+.highcharts-container.is-chart-fullscreen
+  .chart-tooltip-table thead th {
+  font-size: 13px;
+}
