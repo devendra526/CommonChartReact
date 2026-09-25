@@ -1,0 +1,66 @@
+const toTooltipConfig = (
+  config?: WidgetChartTooltipConfig
+): CommonChartTooltipConfig | undefined => {
+  if (!config) {
+    return undefined;
+  }
+
+  return {
+    mode: config.mode ?? 'table',
+
+    categoryLabel: config.categoryLabel ?? 'Category',
+
+    columns: config.columns ?? [],
+
+    removeSeriesPrefixes: config.removeSeriesPrefixes ?? [],
+
+    sortDescending: config.sortDescending ?? false,
+
+    valueDecimals: config.valueDecimals ?? 1,
+
+    footerSeriesMatcher: config.footerSeriesContains
+      ? (seriesName: string) => {
+          const normalizedSeriesName = seriesName
+            .trim()
+            .toLowerCase();
+
+          const footerText = config.footerSeriesContains!
+            .trim()
+            .toLowerCase();
+
+          return normalizedSeriesName.includes(footerText);
+        }
+      : undefined,
+  };
+};
+
+
+
+******
+
+const tooltipConfig = toTooltipConfig({
+  mode: 'table',
+
+  categoryLabel: 'FS Type',
+
+  columns: [
+    {
+      key: 'mc',
+      label: 'MC ($MM)',
+      seriesPrefix: 'MC ',
+    },
+    {
+      key: 'hist',
+      label: 'Hist ($MM)',
+      seriesPrefix: 'Hist ',
+    },
+  ],
+
+  removeSeriesPrefixes: ['MC ', 'Hist '],
+
+  footerSeriesContains: 'cvar trend',
+
+  sortDescending: true,
+
+  valueDecimals: 1,
+});
