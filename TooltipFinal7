@@ -1,0 +1,53 @@
+Sure. You can send something like this:
+
+Subject: Backend Changes Required – Advanced Tooltip Configuration for Charts
+
+Hi Team,
+
+As part of the enhanced tooltip implementation for our charts, we need two additional parameters to be provided in the API response under views.chart:
+
+{
+  "advanceTooltip": true,
+  "tooltipConfig": {
+    "mode": "table",
+    "categoryLabel": "FS Type",
+    "columns": [
+      {
+        "key": "mc",
+        "label": "MC ($MM)",
+        "seriesPrefix": "MC "
+      },
+      {
+        "key": "hist",
+        "label": "Hist ($MM)",
+        "seriesPrefix": "Hist "
+      }
+    ],
+    "removeSeriesPrefixes": ["MC ", "Hist "],
+    "footerSeriesContains": "cvar trend",
+    "sortDescending": true,
+    "valueDecimals": 1
+  }
+}
+
+advanceTooltip will be a boolean flag to determine whether the UI should use the new advanced/table tooltip functionality. When it is true, the UI will read and apply tooltipConfig. When it is false or not provided, the existing/default tooltip behaviour can be used.
+
+Details of the tooltipConfig properties:
+
+* mode – Defines the tooltip display format. Currently "table" indicates that the tooltip should be rendered in tabular format.
+* categoryLabel – Heading/label for the category column in the tooltip, for example "FS Type".
+* columns – Defines the dynamic value columns that should be displayed in the tooltip.
+    * key – Unique identifier for the tooltip column, e.g. "mc" or "hist".
+    * label – Display heading for that column, e.g. "MC ($MM)".
+    * seriesPrefix – Prefix used to identify which chart series belongs to this column, e.g. "MC " or "Hist ".
+* removeSeriesPrefixes – List of prefixes that should be removed from the series name while displaying the category/FS Type. For example, "MC EQDL" can be displayed as "EQDL".
+* footerSeriesContains – Text used to identify the series that should be displayed separately as the tooltip footer. For example, a series containing "cvar trend" will be treated as footer information.
+* sortDescending – Boolean flag indicating whether tooltip rows should be sorted in descending order based on their values.
+* valueDecimals – Number of decimal places to use while displaying numeric values. For example, 1 will display a value as 123.4.
+
+This configuration will allow the frontend tooltip implementation to remain generic and API-driven rather than having chart-specific values hardcoded in the UI.
+
+Please let me know if you need any clarification regarding the expected response structure.
+
+Thanks,
+Devendra
