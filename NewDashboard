@@ -1,0 +1,77 @@
+Create an alternative version of my Equities L4 VaR Dashboard using the existing project as a reference.
+
+IMPORTANT: Do not modify, rename, move, or delete any existing files. Create all new dashboard files inside a separate folder, following the project’s naming conventions—for example, src/features/equities-var-dashboard-v2/.
+
+First inspect the existing dashboard, filters, navigation, CommonChart, AG Grid wrappers, data hooks, and styling to understand how they work.
+
+Implementation approach:
+
+* Build a separate DashboardV2 entry component with its own layout, styles, and supporting components.
+* Reuse existing components, types, utilities, and data hooks through imports where possible, without modifying their source files.
+* If a component requires changes, create a dashboard-specific version inside the new folder. Keep its dependencies pointing to the appropriate existing modules.
+* Do not change package.json, routing, shared styles, application entry points, or configuration files.
+* Do not install dependencies.
+* Scope all new styling under a unique root class such as .equities-var-dashboard-v2. Avoid global selectors and styles that could affect the existing dashboard.
+* Avoid importing modules that introduce unintended global styling where a scoped alternative is available.
+
+Target design:
+
+1. Compact navy horizontal navigation using the existing navigation labels and permission rules.
+2. Dashboard title and breadcrumbs, with existing export actions aligned right.
+3. Compact filter toolbar preserving every existing filter, selected value, handler, and date dependency. Secondary filters can go inside a working “More filters” section.
+4. A compact summary strip showing MC VaR, Historical VaR, MC SVaR, and Historical SVaR.
+5. Two large charts in one row: standalone VaR/SVaR trend at approximately 60% width and component VaR chart at approximately 40%.
+6. A full-width desk-level grid below the charts, preserving grouped MC/Historical VaR/SVaR columns, COB, PCOB, differences, totals, sorting, and drill-down behavior.
+7. Keep all remaining dashboard grids and charts accessible below or through working section tabs.
+
+Visual styling:
+
+* Page background: #F4F7FB.
+* Navigation: #102A4C.
+* White cards with subtle #DDE5EF borders and 8px corner radius.
+* Primary accent: #2563EB.
+* Main text: #172B4D; secondary text: #64748B.
+* Existing application font, compact readable controls, and consistent 16px spacing.
+* Subtle table row shading and a distinct grand-total row.
+* Preserve existing risk-change color semantics and consistent series colors.
+
+Data and behavior:
+
+* Reuse the existing data flow where it can be consumed without changing existing files.
+* Bind summary metrics to the corresponding existing standalone grand totals. Do not sum desk rows to derive portfolio risk totals.
+* If data mapping is unclear, display “—” and document the missing mapping.
+* Preserve API payloads, filter dependencies, tooltips, export, fullscreen behavior, and MC/Historical legend interactions.
+* Avoid duplicate API requests caused by the new layout.
+* Do not replace real data with invented values.
+* If a standalone preview requires mock data, keep it in a clearly labeled file inside the new folder and separate it from the production data adapter.
+
+Responsiveness:
+
+* Wrap filters and stack charts on narrower screens.
+* Keep horizontal scrolling inside wide grids.
+* Ensure charts and grids resize correctly.
+* Account for navigation height when using sticky filters.
+* Provide accessible labels, keyboard navigation, and visible focus states.
+
+Integration boundary:
+Because existing files must remain unchanged, do not register a new route or mount DashboardV2 in the current application.
+Instead, create a README inside the new folder containing:
+
+* The new dashboard’s entry component.
+* Required providers and props.
+* Exact manual integration snippets for previewing it.
+* Any route or application-shell changes that would eventually be needed.
+* How to avoid displaying both the existing sidebar and the new top navigation.
+* Data mappings or functionality that still require integration.
+
+Do not describe the dashboard as available at a URL unless it has actually been mounted and verified.
+
+Validation:
+
+* Run available build/type checks without editing existing files.
+* Distinguish new issues from pre-existing errors.
+* Inspect the final diff and confirm that all task changes are additions within the new folder.
+* Leave any pre-existing user changes untouched.
+* Summarize the files created, checks performed, and remaining manual integration steps.
+
+Briefly describe the planned folder structure, then proceed with creating the dashboard.
