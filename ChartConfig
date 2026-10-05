@@ -1,0 +1,157 @@
+Inspect my existing React + TypeScript project and design a reusable, versioned backend JSON response contract for our shared Highcharts chart component.
+
+My goal is to share this contract with the backend developer so that chart data, appearance, axes, legends, and custom tooltip behavior can be driven by the API response.
+
+First inspect the existing implementation, especially:
+
+* CommonChart.tsx and CommonChart.css
+* toChartProps.ts
+* commonChartTooltip.ts
+* WidgetMetadata.ts
+* Existing chart response/config JSON files
+* The mapping from API views.chart to chart component props
+* Installed Highcharts version, React wrapper, and loaded modules
+
+Use the actual files and installed dependencies as the source of truth. Identify anything you cannot find instead of guessing.
+
+CURRENT CONFIGURATION
+
+My existing configuration includes:
+schemaVersion, dashboardId, charts, type, orientation, categoryField, valueFields, seriesTones, seriesStyle, areaFirstSeries, legend, height, seriesLabels, and chartTooltip.
+
+The custom tooltip configuration includes settings such as:
+shared, groupingEnabled, separators, groupedRowHeader, rowHeader, namePattern, columnLabels, and footerWhenGrouped.
+
+Some existing flows may also use advanceTooltip and tooltipConfig under views.chart. Trace these fields end to end and explain how they relate to chartTooltip. Propose one canonical structure with backward-compatible mapping.
+
+REQUIREMENTS
+
+1. One extensible response contract
+
+Design a common envelope with schemaVersion, dashboardId, and charts keyed by stable chart IDs.
+
+Separate:
+
+* Standard Highcharts options.
+* Chart data and any necessary field mappings.
+* Application-specific behavior, including our advanced tooltip.
+
+Prefer native Highcharts property names and JSON-compatible options instead of inventing an alternative for every Highcharts setting.
+
+Clearly define where each setting belongs. Avoid duplicate sources of truth and document precedence where overrides are necessary.
+
+2. Support different chart families
+
+Design the contract so it can accommodate all chart families supported by the installed Highcharts version and relevant modules.
+
+Include common charts such as line, spline, area, areaspline, column, bar, pie/donut, scatter, bubble, and mixed-series charts.
+
+Explain extensions for range, waterfall, boxplot, errorbar, heatmap, treemap, sunburst, gauge, polar/radar, funnel, pyramid, Sankey, networkgraph, and other available series.
+
+Distinguish Highcharts Core, Stock, Maps, and Gantt where they require different constructors, modules, or data.
+
+Do not claim every chart works automatically with the currently loaded modules. Provide a capability/module matrix and an extension approach.
+
+3. Correct data structures
+
+Do not force every chart into categoryField + valueFields.
+
+Support chart-appropriate point structures, including:
+
+* x/y values and datetime series.
+* Named points for pie/donut.
+* x/y/z for bubbles.
+* low/high ranges.
+* Boxplot values.
+* OHLC/candlestick values.
+* from/to/weight relationships.
+* Hierarchical id/parent/value points.
+* Map joining and geometry references.
+* Gantt start/end/dependency fields.
+
+Recommend a canonical data approach. If both row-based mapping and native Highcharts series data are needed, use explicit modes and explain when each applies.
+
+Use stable series IDs and axis IDs. Define date format, timezone interpretation, null handling, and missing-value behavior.
+
+4. Standard chart settings
+
+Cover configurable titles, subtitles, dimensions, spacing, colors, series names, dashStyle, markers, line widths, stacking, mixed series types, visibility, data labels, legends, and responsive settings.
+
+Support multiple x/y axes, categories, datetime/logarithmic axes, titles, units, opposite axes, min/max, plot lines, and plot bands.
+
+Also account for zooming, exporting, accessibility, no-data display, and our existing fullscreen behavior where supported.
+
+Preserve native chart-specific options through a documented JSON-compatible extension mechanism.
+
+5. Preserve and generalize our advanced tooltip
+
+Reuse the existing tooltip implementation and configuration wherever possible.
+
+Support:
+
+* Standard or advanced tooltip mode.
+* Dynamic date/header formatting and units such as $MM.
+* Configurable row and column labels.
+* MC-only, Hist-only, and Both modes.
+* A single value column for MC/Hist and separate columns for Both.
+* Grouping related series into the same row.
+* Configurable column ordering.
+* Header separators, footer rows, and bold footer styling.
+* Configurable number precision and missing-value display.
+
+Avoid hardcoding MC, Hist, VaR, SVaR, or chart-specific names in the generic renderer.
+
+Prefer explicit series metadata for tooltip grouping, column identity, and footer roles. Keep series-name parsing only as a backward-compatible fallback.
+
+Inspect our existing footerSeriesContains/footerSeriesMatcher handling if present. The backend must send declarative matching criteria, never JavaScript functions.
+
+Explain how tooltip behavior changes for chart families where shared or tabular tooltips are unsuitable.
+
+6. JSON and frontend responsibilities
+
+The response must be valid JSON: no functions, JSX, undefined, executable JavaScript strings, or callback bodies.
+
+Use Highcharts format strings where appropriate for the installed version.
+
+For custom formatters, click handlers, legend grouping, fullscreen actions, or drilldown loaders, use declarative settings or registered handler IDs resolved by frontend code.
+
+Never use eval or new Function. Resolve modules and handlers through frontend-controlled registries.
+
+Clearly distinguish the backend response type from the final Highcharts.Options object created by the frontend adapter.
+
+7. Compatibility and validation
+
+Keep existing charts working.
+
+Document mappings from existing fields such as seriesStyle.dash and areaFirstSeries to the proposed structure. Do not silently drop behavior.
+
+Specify defaults, required versus optional fields, supported combinations, and useful validation errors.
+
+Define safe handling for unsupported types, missing modules, malformed points, invalid axis references, unknown handler IDs, empty data, and absent tooltip settings.
+
+Do not use any as the universal solution. Use appropriate TypeScript discriminated unions and installed Highcharts types where useful, while ensuring the API contract remains JSON-only.
+
+DELIVERABLES
+
+Create the proposal in a separate chart-config-contract folder, following repository conventions. Do not modify production components yet.
+
+Provide:
+
+1. A short explanation of the proposed architecture and current configuration flow.
+2. Complete TypeScript types for the backend contract.
+3. A JSON Schema, or equivalent runtime validation schema using an existing project dependency.
+4. Complete valid JSON response examples for:
+    * Our existing MC/Hist VaR and SVaR trend chart with advanced tooltip.
+    * Stacked columns.
+    * Mixed column and line series with two y-axes.
+    * Pie/donut.
+    * Heatmap.
+    * One specialized chart demonstrating a different point structure.
+5. A field-reference document for the backend developer, including purpose, type, required/default status, and example.
+6. A chart-family capability table describing data shape, constructor, and required modules.
+7. An integration plan explaining how the response reaches CommonChart and the tooltip formatter, plus the precise files that would need changes.
+8. A backward-compatibility and migration plan.
+
+Verify the sample JSON against the proposed schema and check that examples match their declared chart types.
+
+Return complete files, not partial snippets. Prioritize a practical contract compatible with this project, with clear extension points for additional chart families.
