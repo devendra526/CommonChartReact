@@ -1,0 +1,241 @@
+Act as a senior API architect and Highcharts expert.
+
+Design a complete, dynamic, backend-driven JSON response contract for rendering Highcharts charts in a reusable frontend component.
+
+Base the design on official Highcharts documentation. Do not inspect or depend on an existing project, component, or API structure. State which Highcharts version the proposal targets and identify any module or product dependencies.
+
+The purpose is to share the resulting response examples and configuration documentation with our backend team so they can implement the API responses.
+
+1. Design a reusable configuration structure
+
+Separate the response into:
+
+* Common configuration shared by chart types.
+* Chart-specific configuration.
+* Individual series configuration.
+* Chart data.
+* Custom application configuration, such as advanced table tooltips.
+
+Prefer native Highcharts option names and structures where practical. Clearly identify custom fields and explain how the frontend maps them to Highcharts.
+
+Use one consistent response envelope, with separate data structures where different chart types require them.
+
+Support multiple series, multiple axes, and mixed chart types.
+
+Do not create one oversized response containing irrelevant settings for every chart type. Each example should contain only applicable settings.
+
+2. Include common chart configuration
+
+Consider:
+
+* Chart ID and response schema version.
+* Chart type.
+* Title and subtitle.
+* Dimensions, spacing, and margins.
+* Background, borders, and colors.
+* Legend visibility, position, layout, and ordering.
+* Tooltip settings.
+* Data labels.
+* Number formatting, decimals, prefixes, suffixes, currency, and units.
+* Date formatting and timezone.
+* Animation.
+* Accessibility.
+* Exporting and chart menu options.
+* Zooming, panning, and selection.
+* Responsive behavior.
+* No-data presentation.
+
+Explain which settings can be shared across chart types and which are only conditionally applicable.
+
+Differentiate backend-provided configuration from frontend-owned defaults and behavior.
+
+3. Include axis configuration
+
+Where applicable, support:
+
+* Category, datetime, linear, and logarithmic axes.
+* Multiple x-axes and y-axes.
+* Stable axis IDs and series-to-axis references.
+* Axis titles and labels.
+* Minimum, maximum, and tick intervals.
+* Opposite and reversed axes.
+* Grid lines.
+* Plot lines and plot bands.
+* Per-axis units and formatting.
+
+Explain which chart types do not use conventional x/y axes.
+
+4. Include series and point configuration
+
+Where applicable, support:
+
+* Series ID, name, and type.
+* Color and visibility.
+* Line width, dash style, and markers.
+* Stacking and stack groups.
+* Data labels.
+* Axis mapping.
+* Legend ordering and linked series.
+* Per-series tooltip settings.
+* Point-level styling and metadata.
+* Null values, missing data, and gaps.
+* Mixed charts with different series types.
+
+Use stable identifiers rather than relying on display names for relationships.
+
+5. Provide separate responses for different data structures
+
+Create a chart-type coverage table using official Highcharts documentation.
+
+Group charts that share a data structure, but provide separate complete JSON examples whenever the structure changes.
+
+Cover at least:
+
+1. Line, spline, area, and areaspline.
+2. Column and bar.
+3. Stacked and percentage-stacked charts.
+4. Mixed charts, including column plus line with multiple axes.
+5. Pie and donut.
+6. Scatter.
+7. Bubble.
+8. Heatmap.
+9. Treemap and sunburst.
+10. Area range, column range, and error bars.
+11. Boxplot.
+12. Waterfall.
+13. Gauge and solid gauge.
+14. Funnel and pyramid.
+15. Polar/radar configurations.
+16. Sankey and dependency wheel.
+17. Network graph.
+18. X-range and Gantt.
+19. OHLC and candlestick.
+20. Histogram and bell curve.
+21. Map-based charts.
+
+Add other documented chart types to the coverage table. Clearly state any exclusions rather than claiming exhaustive support.
+
+Distinguish chart types from configurations of chart types—for example, stacking, donut, and polar behavior.
+
+For each distinct data structure:
+
+* Explain its required fields.
+* Provide a complete API response.
+* Explain chart-specific configuration.
+* Identify required modules or Highcharts products.
+* Explain how the data maps to the chart.
+
+Prefer readable object-based points where supported. If arrays or tuples are necessary, explain the exact position and meaning of each value.
+
+Do not force all charts into an {x, y} data structure.
+
+For large external assets such as map geometry, explain whether the response embeds the asset or references it, and define how the frontend resolves that reference.
+
+6. Include a generic advanced tooltip configuration
+
+Add the following custom application fields:
+
+* advanceTooltip: boolean.
+* tooltipConfig: object.
+
+Design tooltipConfig to support:
+
+* Dynamic heading and optional date.
+* Dynamic columns and labels.
+* Explicit mappings from data fields to tooltip cells.
+* Category-based row grouping.
+* Configurable row and column ordering.
+* Number formatting and units per column.
+* Missing-value placeholders.
+* Optional footer rows.
+* Bold footer styling and a separator below the header.
+* Optional totals with explicit calculation rules.
+
+Provide three complete examples:
+
+1. Standard Highcharts tooltip.
+2. Advanced tooltip with one measure: category + MC.
+3. Advanced tooltip with two measures: category + MC + Hist.
+
+The design must also support other measure names without changing frontend logic.
+
+Use explicit category and measure IDs rather than extracting meaning from series display names.
+
+Explain how related MC and Hist series can share category colors and appear as grouped legend entries. Clearly identify any custom frontend logic required.
+
+Do not assume all chart types support the same tooltip layout or shared-tooltip behavior.
+
+7. Keep all API responses JSON-safe
+
+The backend must not send:
+
+* JavaScript functions.
+* Formatter callbacks.
+* Event-handler functions.
+* JSX.
+* Executable code strings.
+
+Where Highcharts requires a function, define a declarative configuration or an approved handler/formatter ID that the frontend resolves.
+
+Explain which behavior cannot be implemented through JSON alone.
+
+Avoid unrestricted configuration passthrough. Define supported fields and a controlled extension approach for additional Highcharts options.
+
+8. Define defaults and validation rules
+
+Document:
+
+* Required, optional, and conditional fields.
+* Defaults when values are omitted.
+* Meaning of null, false, 0, and empty arrays.
+* Configuration precedence.
+* Array replacement or merging behavior.
+* Axis and series ID validation.
+* Valid combinations of chart types and settings.
+* Handling of unknown chart types and unavailable modules.
+* Date/timestamp format and timezone.
+* Missing data versus zero values.
+* Empty responses and failed responses.
+* Backward compatibility and schema versioning.
+
+Avoid duplicating the same configuration in multiple sections unless precedence is clearly defined.
+
+9. Deliver the output in this order
+
+A. Proposed response structure and a short explanation.
+
+B. Common configuration reference table containing:
+
+* Field path.
+* Type.
+* Required/optional/conditional.
+* Description.
+* Default.
+* Applicable chart types.
+* Native Highcharts field or custom application field.
+
+C. Chart-type coverage table containing:
+
+* Chart type.
+* Data shape.
+* Special configuration.
+* Module/product dependency.
+* Corresponding example.
+
+D. Separate, complete JSON API responses for each distinct data structure.
+
+E. TypeScript types using discriminated unions for different series and data shapes.
+
+F. Validation rules and a few examples of invalid configurations.
+
+G. A short frontend mapping guide explaining how to transform the API response into Highcharts options.
+
+H. A concise backend implementation checklist.
+
+Use realistic, small datasets. Every JSON response must be valid and independently understandable. Do not include comments, ellipses, or placeholders in JSON.
+
+Check that all series references, axis IDs, tooltip mappings, and data fields match.
+
+Cite the official Highcharts documentation used to verify chart options and data structures.
+
+Focus on delivering the actual response contracts and configuration examples, not just general architectural advice. Do not build a React component at this stage.
