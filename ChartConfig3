@@ -1,0 +1,123 @@
+Enhance my existing React + TypeScript Highcharts CommonChart component with these three optional features:
+
+1. Date range selector
+2. Grouped legends
+3. Navy tooltip styling
+
+First inspect the existing component, styles, installed Highcharts version, and configuration flow. Reuse the current architecture and preserve existing chart types, fullscreen behaviour, tooltip formatting, footer rows, and API integration. Avoid unrelated changes.
+
+Keep the implementation generic and configuration-driven. Do not hardcode chart names, category names or measure names.
+
+1. Date range selector
+
+Add a compact range selector at the top-right of each applicable time-series chart:
+
+* 30D, 60D, 90D, YTD and All.
+* Optional From and To date inputs.
+* Clearly highlight the selected preset.
+* Support a configurable default preset.
+* Keep controls responsive without overlapping the title, legend or chart actions.
+
+Check whether Highcharts Stock is already available. Use its native rangeSelector where appropriate. Otherwise, implement React controls using the existing chart instance and xAxis.setExtremes. Do not introduce Highcharts Stock solely for these controls.
+
+Date behaviour:
+
+* Default presets to calendar days; document the exact inclusive boundaries.
+* Anchor presets to a configured reference date, such as selected COB, or otherwise the latest available data date—not the current system date.
+* YTD starts on January 1 of the anchor year.
+* All restores the full available data range.
+* Work correctly across month/year boundaries and the application’s date/timezone conventions.
+* Validate From ≤ To and handle missing or empty data.
+* Show a Custom state when dates or zoom no longer match a preset.
+* Apply ranges consistently across every series.
+* Enable only for compatible date-based charts.
+
+If the chart only contains partial history, changing axis extremes cannot retrieve missing data. Provide an optional onRangeChange callback for server-side loading and explain how the parent supplies the requested data.
+
+Do not change global COB or other dashboard filters unless explicitly configured.
+
+2. Grouped legends
+
+Currently a category can appear multiple times because it has multiple measures, such as:
+
+* EQDL – CVaR
+* EQDL – CHVaR
+* ISDL – CVaR
+* ISDL – CHVaR
+
+Display one category legend item per category, plus separate measure controls.
+
+Expected behaviour:
+
+* Clicking EQDL toggles all EQDL series together.
+* Measure controls independently toggle CVaR, CHVaR or other configured measures.
+* Allow both measures to be visible simultaneously.
+* Effective series visibility must satisfy both category visibility and measure visibility.
+* Hovering or focusing a category highlights its visible series and dims unrelated series.
+* Restore normal styling on mouse leave or blur without changing visibility.
+* Clearly indicate disabled category and measure controls.
+* Preserve selections when data refreshes, where matching IDs still exist.
+* Update series in a batch and redraw once.
+
+Use stable series metadata, such as categoryId, categoryLabel, measureId and measureLabel, rather than parsing display names. Adapt this to the current API structure and provide an example.
+
+Keep category colours consistent between charts. Differentiate measures using configurable shades or another suitable visual treatment. Preserve stack membership, series order and existing chart semantics.
+
+Use the native legend if it can meet these requirements cleanly; otherwise create an accessible React legend. Avoid duplicate native and custom legends.
+
+Provide keyboard support, visible focus styling and accessible toggle states.
+
+3. Navy tooltip
+
+Restyle the existing advanced tooltip using:
+
+* Background: #172B4D
+* Main text and values: #F8FAFC
+* Secondary text and column headings: #CBD5E1
+* Border and dividers: #385170
+* Border radius: 8px
+* Padding: approximately 12px
+* Subtle shadow
+
+Preserve the current dynamic tooltip logic:
+
+* Date heading and configurable unit, such as $MM.
+* Dynamic column headers.
+* Two-column layout for one measure.
+* Three-column layout when two measures are selected.
+* Existing configured footer rows, with bold styling.
+* No additional total or percentage rows unless explicitly configured.
+* Existing number formatting and decimal precision.
+
+Add a thin divider beneath the table headers, right-align numeric values, and use small category-colour markers beside row labels.
+
+Keep zero distinct from missing values; display missing values as “—”. Respect active category and measure selections.
+
+Inspect whether the tooltip uses SVG, useHTML or a custom HTML wrapper. Apply styles to the actual background container so there is no black inner wrapper or double background. Scope styles to this component and handle tooltip.outside if used.
+
+Escape API-provided labels when constructing HTML. Keep tooltip content within the visible area and do not let it block chart interaction.
+
+Configuration and compatibility
+
+Expose optional configuration for range selection, grouped legends and tooltip theme through the existing configuration flow, including views.chart where applicable.
+
+* Preserve advanceTooltip and tooltipConfig compatibility.
+* Use JSON-serializable API configuration.
+* Keep event handlers and formatter functions in frontend code.
+* Use sensible defaults.
+* Existing charts should retain their behaviour when the new features are disabled or configuration is absent.
+* Avoid duplicate chart instances, unnecessary recreation and event-listener leaks.
+* Use proper TypeScript types compatible with the installed Highcharts version.
+
+Deliverables
+
+Implement the changes and provide:
+
+1. Complete updated component and supporting files.
+2. Complete updated CSS or SCSS.
+3. TypeScript configuration types.
+4. Example API configuration and mock series showing two measures across multiple categories.
+5. A short explanation of the integration points.
+6. Verification of range changes, combined category/measure filtering, tooltip footer preservation and fullscreen behaviour.
+
+Keep the UI compact and consistent with the existing dashboard. Implement only these three features.
