@@ -1,0 +1,33 @@
+Fix the synchronization between grouped legends and the advanced tooltip in my existing CommonChart component.
+
+Current issue:
+When I disable EQDL through its grouped legend, the tooltip still displays an EQDL row with CVaR as “—” and CHVaR as 14.45.
+
+Expected behaviour:
+
+* Disabling a category must hide ALL series belonging to it, across every measure, and completely remove that category’s tooltip row.
+* Enabling the category again must restore its series and tooltip row, while respecting any separately disabled measures.
+* Apply this generically to all categories and measures. Do not hardcode EQDL, CVaR, CHVaR, MC or Hist.
+
+Inspect and fix both:
+
+1. The grouped legend handler: ensure it toggles every series associated with the category, not just the representative legend series.
+2. The tooltip formatter: construct rows only from currently enabled categories and visible series. Do not reintroduce hidden categories through raw API data, cached rows, fallback lookups or a second grouping pass.
+
+Use the same stable category/group identifier for legend grouping and tooltip filtering. Effective series visibility must respect both category and measure selections.
+
+Filter hidden series BEFORE building tooltip groups. Completely omit disabled categories rather than displaying “—” for them. Preserve “—” for genuinely missing values in otherwise enabled rows, and retain valid zero values.
+
+After a legend toggle, refresh or dismiss any currently displayed tooltip so stale rows do not remain. Ensure visibility is read after the toggle is applied and avoid double-toggling through both custom and default legend handlers.
+
+Preserve existing dynamic headers, footer configuration, number formatting, navy tooltip styling and fullscreen behaviour.
+
+Verify:
+
+* Disabling EQDL removes both its measure series and its entire tooltip row.
+* Re-enabling EQDL restores it correctly.
+* Other categories work the same way.
+* Single-measure and both-measure modes work.
+* Disabling all categories leaves no stale tooltip.
+
+Provide the complete updated functions and any affected types, with clear replacement locations.
