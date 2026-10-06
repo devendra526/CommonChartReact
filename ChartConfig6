@@ -1,0 +1,33 @@
+Update the advanced tooltip in my existing CommonChart component to fix these two issues:
+
+1. First-column alignment
+
+* Left-align the first header cell and first data cell of every tooltip row, including footer rows.
+* Right-align all numeric columns.
+* Apply this consistently to single-measure and grouped/multiple-measure tooltips.
+* Scope the CSS to this tooltip so other tables remain unaffected.
+
+2. Implement the existing footerWhenGrouped flag
+
+* Find footerWhenGrouped in chart-config, inspect its intended meaning and trace it through the configuration mapping into the tooltip formatter.
+* Ensure the property is preserved and actually used, rather than dropped or overwritten.
+* Use this behaviour: when footerWhenGrouped is true, display the configured footer rows only when the tooltip is grouped. When false, allow the configured footer rows in both grouped and non-grouped tooltips.
+* Preserve the existing default behaviour when the property is absent.
+* Determine grouped mode using the existing tooltip grouping logic, not hardcoded chart names or column counts.
+
+Footer requirements:
+
+* Reuse the existing footer-series matching configuration, including footerSeriesContains or footerSeriesMatcher where supported.
+* Do not hardcode series names, category names or measure labels.
+* Separate matched footer rows from regular body rows so they do not appear twice.
+* If footer display is disabled for the current mode, do not accidentally render footer-only series as normal body rows.
+* Align footer values with the correct dynamic measure columns.
+* Keep valid zero values; display genuinely missing values as “—”.
+* Respect current legend/category/measure visibility and do not restore hidden series.
+* Make footer rows bold, with a thin divider above the footer section.
+* Left-align footer labels and right-align footer numbers.
+* Do not invent totals or sum series automatically; use configured footer-series values unless an explicit aggregation setting already exists.
+
+Preserve the navy tooltip styling, date/unit heading, dynamic headers, existing number formatting and all unrelated chart behaviour.
+
+Provide complete updated code for the affected formatter, configuration mapping, TypeScript types and styles. Include example configurations for footerWhenGrouped true and false, and verify grouped, single-measure, missing-flag and hidden-series cases.
