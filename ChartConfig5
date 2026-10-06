@@ -1,0 +1,49 @@
+Fix the legend/range-selector layout and tooltip overlap in my existing CommonChart component.
+
+Current issues:
+
+1. Legends and range-selector buttons are not vertically aligned on the same row.
+2. There is unnecessary space above the legends and below the range selector.
+3. When hovering near the chart’s right edge, the range buttons appear on top of the tooltip.
+
+Required layout:
+
+* Keep the title in its own top row.
+* Below the title, place legends on the left and range buttons on the right, vertically centred in ONE compact toolbar row.
+* Keep a consistent 8–12px gap between this toolbar and the plot.
+* Reserve real layout space for the toolbar so controls never float over the plot.
+* Preserve chart action icons without collisions.
+* At narrow widths, allow an intentional second row with a small gap instead of overlap.
+
+Inspect the existing implementation first:
+
+* Determine whether legends and range controls are Highcharts SVG elements or custom React/HTML elements.
+* Check chart spacing, margins, legend positioning, range-selector positioning, wrapper padding, absolute positioning and CSS transforms.
+* Remove duplicate space reservation and conflicting offsets.
+* If both controls are HTML, use a shared flex/grid toolbar.
+* If they are SVG or mixed SVG/HTML, coordinate their measured layout and reserve space only once.
+* Do not rely on hardcoded negative margins or fixed pixel offsets that only work at one chart size.
+
+Tooltip overlap fix:
+
+* Inspect the actual tooltip container, including useHTML/outside settings, and the controls’ stacking contexts.
+* Ensure the full tooltip—background and text—renders above chart controls if their bounds intersect.
+* Do not fix this merely by adding an arbitrary huge z-index.
+* Position the tooltip within the available chart/viewport bounds, preferably below the toolbar, shifting it left when hovering near the right edge.
+* Prevent clipping by parent overflow rules.
+* Preserve pointer interaction with the range buttons.
+* Keep the navy background (#172B4D), dynamic columns, footer rows and current formatting.
+
+The layout must recalculate correctly on resize, tab activation and entering/exiting the existing custom fullscreen view. Avoid redraw loops or duplicate event listeners.
+
+Preserve all existing range selection, grouped legend toggling, tooltip filtering and chart data behaviour. Scope styling to CommonChart.
+
+Verify on both line and stacked-column charts:
+
+* Legends and range controls share one row when space allows.
+* No excessive blank space above the plot.
+* Tooltips near both edges remain fully readable.
+* Range buttons never render over tooltip content.
+* Normal and fullscreen layouts both work.
+
+Implement the fix and provide complete updated files for every file changed, with a brief explanation of the root cause.
