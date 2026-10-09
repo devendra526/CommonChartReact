@@ -1,0 +1,29 @@
+Fix the drilldown tab layout in the Global Equities Greek Dashboard.
+
+Current issue:
+Opening a drilldown tab from the Greek dashboard displays a “VAR TYPE” filter with MC VaR, MC SVaR, Hist VaR, and Hist SVaR. These controls do not belong to this dashboard.
+
+Expected behavior:
+Keep the existing Greek dashboard shell shown in the first screenshot. Selecting a cell-menu action should add and activate one drilldown tab beside Summary. Only the tab content should change to show the selected drilldown.
+
+Requirements:
+
+1. Trace the flow from GridWidget/DataGrid through openBreakdown, tab creation, and the drilldown renderer. Identify where the VaR-specific filter configuration or layout is being introduced.
+2. Preserve the Greek dashboard’s existing:
+    * Header and breadcrumb
+    * Side navigation
+    * Summary tab and tab bar
+    * Applicable dashboard filters and cross-filter bar
+    * Overall spacing and layout
+3. Render the selected Equity Symbol, Product, or Trends content inside the existing tab-content area. Do not mount another dashboard shell, duplicate the tab bar, or introduce VaR-specific controls.
+4. Resolve drilldown layout and available filters from the source dashboard’s configuration. Pass the source dashboard identity through the tab context if necessary. Do not infer the dashboard type from the tab title or action name, since other dashboards may use the same actions.
+5. For Greek dashboard drilldowns, do not render or default to the VaR Type selector, and do not inject VaR-specific defaults into their data requests. Keep VaR controls working normally on dashboards that actually require them. Fix the configuration/rendering logic rather than hiding the controls with CSS.
+6. One menu selection must create only one tab. If an identical drilldown is already open, activate it instead of adding a duplicate. Preserve other intentionally opened tabs.
+7. Preserve the corrected dynamic title, for example:
+    AMER-Deriv-Exotics-Delta: Equity Symbol
+8. Keep the clicked region, desk, metric, selected action, and applicable filters attached to that tab so the correct data loads.
+9. Returning to Summary must preserve its filters, grid expansion, selection, and scroll state. Closing the active drilldown should activate a remaining tab or Summary using the existing tab behavior.
+
+Verify all three actions—Equity Symbol, Product, and Trends—from the four Greek dashboard grids. Confirm that no VaR Type filter appears, only one tab is created per action, and existing VaR dashboards remain unaffected.
+
+Implement the fix and provide the complete updated contents of changed files. Briefly explain which shared layout or configuration caused the unwanted VaR filter.
