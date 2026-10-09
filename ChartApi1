@@ -1,0 +1,80 @@
+Fix a persistent issue in the VaR Summary tab: grids display real API data, but charts still display mock data even though chart API integration is already implemented. Previous attempts have not fixed it.
+
+Investigate and implement the root-cause fix. Do not simply add another API call, change mock values, or assume the existing integration is being used by the rendered chart.
+
+Scope:
+Focus on the VaR dashboard → Summary tab → its chart widgets. Preserve working grid behavior and other dashboards.
+
+1. TRACE THE ACTUAL RENDERED PATH
+    Identify the exact components rendered by the VaR Summary route, including the chart widget, configuration hook/adapter, and final chart component.
+
+Trace:
+API request → response → query/store/cache → widget data → chart configuration/data transformation → final chart options → rendered chart.
+
+Use actual repository names. Do not assume a similarly named component is the one used on this route.
+
+Compare this with the working grid data flow to identify where chart handling diverges.
+
+2. FIND THE FIRST POINT WHERE API DATA IS LOST
+    Inspect:
+
+* Whether the chart request actually executes for the active Summary tab and widget.
+* Request parameters, widget IDs, enabled conditions, and query/cache keys.
+* The actual API response shape and the paths used to extract chart data.
+* Whether chart data is in the same response as grid data or a separate response.
+* Mock imports, fixtures, hardcoded series, initialData, placeholderData, mock-service handlers, and fallback adapters reachable from this route.
+* Object-spread/merge order that may overwrite API series with mock series.
+* Hooks that provide chart configuration containing embedded mock data.
+* Memo/effect dependencies or local state that retain initial mock options after the API response arrives.
+* Whether the chart wrapper receives updated options and actually updates its rendered series.
+* Whether switching tabs, filters, or VaR type restores stale mock data.
+
+Search for mock usage in the relevant execution path. Do not remove unrelated mocks across the application.
+
+3. ESTABLISH EVIDENCE BEFORE CHANGING LOGIC
+    Identify the first boundary where the expected API values become mock, stale, or missing values.
+
+If runtime inspection is available, compare:
+
+* The chart request response.
+* The transformed series.
+* The options passed into the rendered chart.
+* The series currently displayed by the chart instance.
+
+If needed, add temporary development-only diagnostics showing widget ID, data source, series names, and point counts. Avoid logging full financial datasets. Remove temporary logs after verification.
+
+If live API access is unavailable, state that limitation and validate using an existing response sample or a controlled fixture matching the real response contract. Do not claim live verification.
+
+4. IMPLEMENT THE ROOT-CAUSE FIX
+
+* Make the existing API integration the authoritative source of chart data.
+* Preserve existing chart styling, tooltip behavior, legends, axes, and interactions.
+* Separate static presentation configuration from dynamic API series so static configuration cannot overwrite API data.
+* Adapt the real response structure explicitly; do not guess property names or silently fall back to mock series when mapping fails.
+* Retain valid zero and negative values.
+* Show loading while fetching, an empty state for a successful empty result, and an error state for failures.
+* Never display mock data as a fallback for loading, errors, empty results, or response-mapping failures.
+* If mock/demo mode is intentionally supported, keep it explicitly opt-in and disabled for the normal API-backed VaR Summary flow.
+* Ensure changes to relevant filters, COB/PCOB, VaR type, and widget context update the correct chart data without stale responses overwriting newer results.
+* Do not introduce duplicate requests or force remounts as a workaround unless you demonstrate why they are necessary.
+
+5. VERIFY THE VALUES, NOT JUST THAT A CHART RENDERS
+    For every chart on the VaR Summary tab:
+
+* Compare representative API values with the corresponding rendered chart points.
+* Confirm transformed values follow the application’s existing unit/date rules.
+* Change a relevant filter and verify the chart reflects the resulting API response.
+* Switch away from Summary and back; confirm mock series do not reappear.
+* Verify empty and failed responses do not show mock data.
+* Confirm working grids and other dashboard charts remain unaffected.
+
+Add a focused regression test at the faulty boundary if the project has a suitable test setup. Use clearly distinguishable API values so the test fails if mock data is rendered.
+
+Deliver:
+
+1. The confirmed root cause, with the exact files/functions involved.
+2. A short explanation of why previous behavior displayed mock data.
+3. The implemented fix and complete updated contents of changed files.
+4. Verification performed and any remaining runtime limitations.
+
+Do not stop at recommendations or say “API integration is already present.” Trace the data all the way to the visible chart and fix the point where the real data stops being used.
