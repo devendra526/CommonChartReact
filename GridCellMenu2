@@ -1,0 +1,46 @@
+Fix the drilldown tab naming in GridWidget/DataGrid.
+
+Current incorrect title:
+Emea_106.88983_Stock_Vega: Equity Symbol
+
+Required exact title:
+EMEA-Cash-Stock-Vega: Equity Symbol
+
+Required format:
+{Region display label}-{Volcker desk display label}-{Metric display label}: {Action display label}
+
+Trace the clicked-cell event through the menu handler, openBreakdown action, and tab-title creation. Fix the underlying context mapping rather than just replacing characters in the final title.
+
+Requirements:
+
+1. Resolve Region from the clicked row’s region metadata or its parent hierarchy. For Cash under EMEA, use EMEA—not the global filter or a previously selected row.
+2. Resolve the Volcker desk from the row’s actual desk display-label field, using the same source that renders “Cash” in the grid’s first column.
+    * Do not use the clicked numeric value, the first property in the row, Object.values(), or an arbitrary fallback.
+    * If the underlying code is CASH, resolve its display label to Cash using existing metadata/mappings.
+    * Do not blindly title-case all desk names because some contain acronyms.
+3. Resolve the metric from the clicked column’s configured display header.
+    * Stock Vega → Stock-Vega
+    * Delta → Delta
+    * Do not derive it from another column or the cell value.
+4. Map menu action IDs to these title suffixes:
+    * Drilldown to Equity Symbol → Equity Symbol
+    * Drilldown to Product → Product
+    * Trends → Trends
+5. Capture region, desk, metric, and action context for the exact clicked cell. Use that captured context when the menu option is selected; do not depend on asynchronous row-selection state.
+6. Create one typed, reusable title formatter and use it consistently for all four enabled grids and all three actions. Trim label whitespace and replace spaces/underscores within title segments with hyphens. Preserve canonical display-label casing, including uppercase EMEA, AMER, and APAC.
+7. Keep display labels separate from stable IDs and API parameters. This title fix must not alter the identifiers used to fetch drilldown data or identify tabs.
+8. If a required label is missing, resolve it through the existing row/column metadata or hierarchy. Never substitute a numeric metric value. If it genuinely cannot be resolved, report the missing field clearly instead of silently creating an incorrect title.
+9. Use the same resolved display context for the destination subtitle/breadcrumb, so it shows:
+    EMEA → Cash → Stock Vega
+    rather than:
+    Emea → 106.88983 → Stock Vega
+
+Verify these exact results when clicking Cash → Stock Vega under EMEA:
+
+* EMEA-Cash-Stock-Vega: Equity Symbol
+* EMEA-Cash-Stock-Vega: Product
+* EMEA-Cash-Stock-Vega: Trends
+
+Also verify that clicking Cash under AMER uses AMER, and clicking different metric columns uses their respective headers.
+
+Implement the fix and provide complete updated code for the changed functions/types, explaining which incorrect field was previously used as the desk label.
