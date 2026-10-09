@@ -1,0 +1,82 @@
+Implement a configurable cell-click menu in the existing React/TypeScript dashboard.
+
+First inspect GridWidget, DataGrid, GridEvent, WidgetDef, the grid response metadata, dashboardActions.openBreakdown, and the existing application tab/navigation mechanism. Follow the project’s existing patterns and implement the changes.
+
+Requirements:
+
+1. Enable this functionality only for these four grids in the Global Equities Greek Dashboard:
+    * Daily Greek
+    * Daily Stress
+    * Weekly Change Greek
+    * Weekly Change Stress
+    Identify their actual widget IDs and enable the feature through widget configuration. Do not rely on display order or hardcode title comparisons inside DataGrid.
+2. When a user left-clicks a Volcker desk cell with isClickable === true, show a menu beside the clicked cell with these exact options:
+    * Drilldown to Equity Symbol
+    * Drilldown to Product
+    * Trends
+    For example, clicking an eligible cell in the Cash row should show this menu. Support other eligible desk rows dynamically; do not hardcode Cash.
+3. Inspect where isClickable currently exists in the response and how DataGrid resolves cell metadata. Use that existing structure. Only an explicit boolean true should enable the menu. If per-cell metadata is not supported yet, introduce a typed, backward-compatible extension and provide a sample response.
+    Do not enable every cell in a row just because one cell is clickable. Do not infer clickability from the cell value; zero is a valid value.
+
+Component integration:
+
+4. Keep DataGrid generic:
+    * DataGrid should detect eligible cell interactions and provide a typed callback/event.
+    * GridWidget should resolve the configured menu actions and handle navigation.
+    * Pass sufficient context: widget ID, stable row ID, row data, column ID/field, cell value, relevant cell metadata, and the cell anchor or pointer coordinates.
+    * Keep DOM events/elements in local component state only, not Redux.
+5. GridWidget currently passes these props to DataGrid:
+    response, density, selectedRowId, interactive, groupTones, height, variant, templateContext, resetToken, ariaLabel, onEvent, rowActions, and treeExpansion.
+    Preserve their existing behavior. The existing onEvent handler handles row selection and returns early when widget.selection is missing. Make the new cell menu work independently of widget.selection and the existing interactive flag.
+    Preserve row selection without duplicate dispatches or accidental navigation. Clicking a tree expand/collapse control, checkbox, existing row-action button, or another interactive control inside a cell must retain that control’s behavior and must not open this menu.
+
+Menu behavior:
+
+6. Reuse the existing design-system Menu/Popover component if available.
+    * Anchor the menu near the clicked cell.
+    * Prevent clipping by grid containers and keep it within the viewport.
+    * Show only one cell menu at a time across the dashboard.
+    * Close it on outside click, Escape, action selection, and when scrolling, data refresh, filtering, or view changes invalidate the anchor.
+    * Support keyboard activation using Enter/Space, keyboard menu navigation, visible focus, and appropriate accessible labels.
+    * Apply a pointer cursor and a subtle hover/focus indication only to eligible cells.
+    * Match the existing dashboard styling.
+
+New-tab behavior and data:
+
+7. Selecting a menu option must open and activate a new application tab for that action, using the existing tab/breakdown architecture.
+    GridWidget already contains rowActions logic that dispatches dashboardActions.openBreakdown and carries filters. Inspect and reuse or extend that flow where suitable. Keep existing rowActions working.
+    Treat “new tab” as an application tab, not a browser tab. If the project has no application-tab mechanism, explain the gap before introducing a different navigation approach.
+8. Pass the clicked cell’s context to the destination:
+    * Source dashboard and widget IDs
+    * Selected action
+    * Stable desk/row identifier and available parent region context
+    * Clicked column/metric and value
+    * Applicable current filters, including COB/PCOB where present
+    Capture the context at click time so later selection changes cannot cause the destination to load another row’s data. Use stable identifiers for data requests, not display labels alone.
+9. Each destination must load data corresponding to the selected option and clicked desk:
+    * Equity Symbol → equity-symbol breakdown
+    * Product → product breakdown
+    * Trends → trend data
+    Use existing destination components, request builders, API hooks, and loading/error/empty states where available. Include the action and relevant context in query/cache keys to avoid displaying another desk’s cached results.
+    Do not invent backend endpoints or claim an integration exists if it does not. If APIs are unavailable, provide a clearly isolated mock adapter with distinct sample data for each action and mark the exact integration points.
+
+Implementation and verification:
+
+10. Keep the menu labels, action IDs, and destination mappings configurable. Use the project’s existing configuration conventions and TypeScript types. Avoid unrelated refactoring and unnecessary dependencies.
+11. Verify:
+
+* Eligible Cash and other desk cells open the three-option menu.
+* Cells with false/missing isClickable do not open it.
+* An eligible zero-value cell works.
+* Each option opens the correct application tab with the clicked desk, metric, and filters.
+* All four target grids support the feature.
+* Other grids retain their existing behavior.
+* Row selection, tree expansion, existing row actions, and grid/chart switching still work.
+* Menu positioning and dismissal work within scrollable grids.
+
+After implementing, provide:
+
+* A concise explanation of the event flow from DataGrid to GridWidget to the destination tab.
+* Complete updated contents of every changed or newly created file, including styles and types, rather than disconnected snippets.
+* The widget configuration and sample cell metadata required to enable this feature.
+* Any backend integration points still awaiting real APIs.
