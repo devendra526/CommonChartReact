@@ -1,0 +1,58 @@
+Update the existing grid cell drilldown menu to open on RIGHT-CLICK instead of LEFT SINGLE CLICK, only for these four grids in the Greek dashboard:
+
+* Daily Greek
+* Daily Stress
+* Weekly Change Greek
+* Weekly Change Stress
+
+Current behavior:
+Right-click shows the default grid context menu: Cut, Copy, Copy with Headers, Copy with Group Headers, Paste, and Export.
+Left-click shows the custom drilldown menu.
+
+Required behavior:
+Right-click on an eligible cell must show ONLY these three options, in this order:
+
+1. Drilldown to Equity Symbol
+2. Drilldown to Product
+3. Trends
+
+Implementation requirements:
+
+1. Inspect the existing GridWidget → DataGrid integration, custom cell menu, and default grid context-menu implementation. Reuse the existing drilldown handlers and tab-opening flow.
+2. Add an optional typed configuration/prop, following existing project conventions, such as:
+    cellMenuTrigger: ‘click’ | ‘contextmenu’
+    Pass ‘contextmenu’ from GridWidget for the four target widget IDs. Preserve current behavior when this prop is omitted. Do not hardcode dashboard titles or widget names inside the shared DataGrid.
+3. For these four grids:
+    * Open the custom menu only when the right-clicked cell has isClickable === true.
+    * Replace the default cell context menu completely; do not append custom actions to Cut/Copy/Paste/Export.
+    * For ineligible body cells, show no cell context menu.
+    * Scope suppression to these grid instances and body-cell interactions. Keep column-header menus and toolbar export functionality working.
+    * Prevent the browser context menu from appearing alongside the custom menu.
+    * Disable the existing left-click menu trigger while preserving normal row selection, cross-filtering, and tree expansion.
+4. Use the grid library’s supported context-menu integration where suitable. If reusing the existing custom popup, suppress the grid’s default popup for these instances so only one menu appears. Do not create competing right-click handlers or globally suppress context menus.
+5. Build the menu context from the actual RIGHT-CLICKED cell, even if another row was previously selected:
+    * Region and parent hierarchy
+    * Desk ID and display label
+    * Column/metric ID and display header
+    * Cell value
+    * Source dashboard/widget IDs
+    * Applicable filters
+    Do not rely on left-click selection state. Valid zero and negative values must remain eligible when isClickable is true.
+6. Retain the existing popup appearance shown in the second screenshot and add Trends as the third option. Position it beside the pointer, keep it within the viewport, and avoid clipping inside scrollable grids. Close on outside click, Escape, selection, or scrolling that invalidates its position. Support keyboard context-menu activation and menu navigation.
+7. Each action must use the existing application-tab flow and preserve the correct dynamic title, for example:
+    EMEA-Cash-Stock-Vega: Equity Symbol
+    EMEA-Cash-Stock-Vega: Product
+    EMEA-Cash-Stock-Vega: Trends
+    Ensure Trends is wired to its intended destination, not just displayed as a menu label. Do not introduce VaR filters into Greek drilldown tabs.
+8. Other grids and dashboards must retain their existing right-click and left-click behavior.
+
+Verify:
+
+* Eligible right-click → exactly the three required options, with no default or browser menu.
+* Left-click → existing selection behavior, no drilldown popup.
+* Ineligible body-cell right-click → no popup.
+* Right-clicking a different row uses that row’s context.
+* All three actions open the correct tab once.
+* All four target grids work; other grids remain unaffected.
+
+Implement the changes and provide complete updated contents of changed files, including the prop/types, GridWidget configuration, DataGrid event handling, and menu actions. Avoid unrelated refactoring.
