@@ -1,0 +1,41 @@
+Investigate and fix the “Top 3 / 5 / 10 / All” buttons at the top-right of the dashboard. The grids below these buttons must display data from the API only.
+
+First determine whether these grids currently receive API data, mock data, or a mixture. Trace the actual rendered components rather than assuming the existing API integration is being used.
+
+Requirements:
+
+1. Trace the complete flow:
+    Button selection → selected Top value → request parameters/query key → API response → transformation → grid rowData.
+2. Check all grids controlled by these buttons for:
+    * Hardcoded rows and mock/fixture imports.
+    * Mock fallbacks during loading, errors, or empty responses.
+    * Initial/placeholder data containing mocks.
+    * Cached responses or local state that ignore the selected Top value.
+    * An API response being overwritten before reaching the grid.
+3. Inspect the existing API contract before implementing:
+    * If the API supports Top-N filtering, use its actual parameter names and supported values for 3, 5, 10, and All.
+    * Do not invent a parameter or assume All means 0, -1, or an arbitrary large number.
+    * If the API returns the complete dataset and Top-N is intentionally handled in the UI, filtering that API response is acceptable. Clearly explain this behavior.
+    * If neither approach can satisfy the requirement with the existing API, identify the exact backend change needed.
+4. Use API-sourced rows exclusively. Preserve the existing ranking/sorting rule and grid structure. Do not arbitrarily take the first N rows unless the API ordering or existing business rule defines them as the top rows. For hierarchical grids, preserve the intended grouping and totals.
+5. When a selection requires a new request:
+    * Include the selected Top value and all relevant dashboard filters in the query/cache key.
+    * Update every grid controlled by this selector.
+    * Handle rapid clicks so an older response cannot overwrite the latest selection.
+    * Reuse the existing API/query layer and avoid duplicate requests.
+6. Show the proper loading, error, and empty states. Never substitute mock rows. If previous API data remains visible during loading, clearly indicate that the new selection is still loading.
+7. Verify Top 3, Top 5, Top 10, and All individually:
+    * Confirm the selected value reaches the correct request or API-data transformation.
+    * Compare displayed row IDs and representative values with the API response.
+    * Confirm All shows all eligible results, accounting for server pagination if present.
+    * Change another dashboard filter and verify it works together with the Top selection.
+    * Confirm no mock data appears after switching tabs or refreshing.
+
+Implement the root-cause fix, not just a button-state change.
+
+Provide:
+
+* Whether each affected grid was using API or mock data, with the exact source file/function.
+* The confirmed cause and changes made.
+* Complete updated contents of changed files.
+* Verification results. If live API access is unavailable, state that limitation and do not claim runtime verification.
