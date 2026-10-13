@@ -1,0 +1,14 @@
+Fix the section-level “View” toggle at the top-right of “Single Name Concentration Risk($MM)”, beside the Top 3/5/10/All buttons.
+
+Currently, the cards display charts by default, but the Chart icon in this View toggle does not appear selected.
+
+Please inspect the existing implementation and fix the following:
+
+1. On initial load, default to Chart view and visibly highlight the Chart button as selected.
+2. Use the same state for the selected button and the displayed view, so they always match. Check for missing initial state, mismatched toggle values, or incorrect selected-state styling.
+3. Clicking Grid should select the Grid button and display the section’s cards as grids. Clicking Chart should select Chart and display charts.
+4. Keep the selected styling visible after clicking elsewhere; it must represent the active view, not just hover or focus.
+5. Ensure API loading, rerenders, and Top 3/5/10/All changes do not clear the selection or unexpectedly reset the chosen view.
+6. Preserve existing per-card view toggles and unrelated sections. Reuse the application’s existing active-button styling.
+
+Implement the fix and briefly explain the root cause and files changed.
