@@ -1,0 +1,20 @@
+Update the subtitle beneath “Greek by Equity Symbol ($MM)” in the Greek Dashboard.
+
+Replace the current arrow-separated text:
+AMER -> Delta1 -> Gamma
+
+With a compact labelled row:
+Region: AMER | Desk: Delta1 | Greek: Gamma
+
+Requirements:
+
+1. Locate the existing subtitle rendering and trace where its values originate. Use the existing dynamic values from API/state/selected drilldown context. Do not hardcode AMER, Delta1, or Gamma.
+2. Style labels (Region:, Desk:, Greek:) in muted grey, regular weight. Style values in dark navy, semibold.
+3. Use thin, light-grey vertical CSS dividers between items, with approximately 12–16px horizontal spacing. No arrows, badges, coloured backgrounds, or buttons.
+4. Keep the row left-aligned beneath the grid title. Use compact 12–13px text, approximately 8px spacing below the title, and 12px spacing before the grid.
+5. Use flex layout with responsive wrapping. Keep each label and value together, and avoid orphaned dividers when wrapping.
+6. Omit any item whose value is null, undefined, or empty, without leaving extra dividers. Preserve valid zero values.
+7. If the header component is shared, support an optional array of label/value items so this layout is reusable. Preserve existing behaviour for other callers.
+8. Keep the grid title, tab title, API calls, grid data, sorting, filtering, and drilldown behaviour unchanged. Scope styles to this subtitle.
+
+Implement the change in the existing project. Show the complete updated code for affected components and styles, and briefly explain where the dynamic values come from.
