@@ -1,0 +1,15 @@
+Remove the summary “Diff” label and its adjacent numeric value from all grid cards under “Single Name Concentration Risk($MM)”.
+
+In the attached screenshot, the highlighted example is “Diff 2,038.8” beside the Total value in the Index Delta card. Remove only this summary element. Keep the DIFF column and its row values inside the grid.
+
+Please inspect the existing implementation and implement the fix:
+
+1. Trace whether this summary label/value comes from the API response, a mapping function, or UI rendering/calculation. Explain the actual source you find.
+2. Remove the summary Diff element across every grid card in this section, including dynamically generated cards.
+3. If the renderer is shared with other sections, use a section-specific prop/configuration to control visibility, preserving existing behavior elsewhere.
+4. Preserve the Total value, exposure values, progress bar, Top N information, grid columns, and existing functionality.
+5. Adjust the layout so removing the element leaves no unnecessary gap.
+6. Do not delete API fields or underlying calculations that other features may use. Do not hardcode the displayed number or use global CSS to hide matching text.
+7. Verify that the summary stays hidden after API refreshes, filter changes, and Top 3/5/10/All selections.
+
+Make the code changes, then summarize the root cause and files changed.
