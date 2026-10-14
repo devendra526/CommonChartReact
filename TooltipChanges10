@@ -1,0 +1,15 @@
+Fix the tooltip clipping issue in our shared Highcharts/CommonChart component.
+
+Issue: When a chart is on the far left of the dashboard, its tooltip extends left and gets cut off or hidden behind the sidebar. See the attached screenshot.
+
+Requirements:
+
+1. Detect the available visible space dynamically. If the tooltip would be clipped on the left, display it to the RIGHT of the hovered point/bar with a small gap.
+2. If there is insufficient space on the right, position it on the left. Keep the entire tooltip within the visible viewport, including top and bottom boundaries.
+3. Calculate placement using the actual tooltip dimensions and chart position. Handle inverted/bar charts correctly; avoid hardcoded coordinates or chart-specific conditions.
+4. Inspect parent overflow, stacking contexts, and the existing tooltip positioning logic. Fix the actual clipping cause rather than only increasing z-index.
+5. Ensure positioning works after scrolling, resizing, sidebar expansion/collapse, and opening our custom chart fullscreen/modal view.
+6. Preserve the existing tooltip content, navy styling, dynamic columns, footer, and formatting.
+7. Apply the fix generically in the shared component without changing chart data or unrelated functionality.
+
+Inspect the existing implementation and installed Highcharts version, then implement the fix. Verify it on charts at the left and right edges and provide the complete updated code for the affected functions, with any required CSS.
