@@ -1,0 +1,15 @@
+Fix category-label and bar-value overlap in the horizontal bar charts under “Single Name Concentration Risk ($MM)”, particularly “Index Delta ($MM)”.
+
+In the attached screenshot, the first bar’s category label and numeric value overlap, making them unreadable.
+
+Requirements:
+
+1. Keep category labels in a dedicated area to the left of the plot, with sufficient separation from bar values.
+2. Position negative values outside the left end of their bars and positive values outside the right end, with a consistent small gap.
+3. Reserve enough space within the numeric axis range for these value labels so they do not overlap category labels or get clipped.
+4. Calculate spacing dynamically based on label length, value width, and chart size. Avoid hardcoded category names, values, or axis limits.
+5. For long category names, use consistent truncation with an ellipsis and show the full name in the tooltip.
+6. Handle horizontal/inverted charts correctly: identify the category and value axes from the chart configuration rather than assuming their visual direction.
+7. Preserve existing number formatting, bar colours, tooltip behaviour, and other chart types.
+
+Inspect the shared CommonChart configuration and implement a reusable fix for horizontal bar charts. Verify the first and last bars, mixed positive/negative values, small cards, and fullscreen. Provide the complete updated affected code and any required CSS.
