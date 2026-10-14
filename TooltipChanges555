@@ -1,0 +1,10 @@
+Update the horizontal bar charts under “Single Name Concentration Risk ($MM)”:
+
+1. Remove numeric data labels above/beside the bars. Keep values in the tooltip and preserve category labels, axis ticks, and axis titles.
+2. Move the tooltip slightly LEFT from the position shown in the mockup, closer to the vertical zero-value axis. Place it just to the RIGHT of that axis with a small gap of approximately 12–16px, rather than at the far-right corner.
+3. Prefer the upper-right area near the zero axis, adjusting vertically when needed to avoid covering the hovered bar.
+4. Calculate placement dynamically using the actual axis position, tooltip dimensions, and available space. Keep the entire tooltip visible without clipping or hiding behind the sidebar.
+5. Maintain this behaviour after resizing, scrolling, sidebar changes, and opening fullscreen/modal view.
+6. Preserve the existing navy tooltip styling, content, footer, and number formatting.
+
+Apply this only to the relevant horizontal bar charts in the shared CommonChart component. Check for configuration overrides that could re-enable bar values. Implement the changes and provide the complete updated affected code and any required CSS.
