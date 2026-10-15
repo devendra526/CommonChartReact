@@ -1,0 +1,35 @@
+Update the Trends drilldown in the Global Equities Greek Dashboard.
+
+First, inspect how EQ_GREEK_PRODUCT_GRID is integrated in the existing “Drilldown by Product” flow. Reuse its API service, request construction, response mapping, and grid configuration.
+
+Required change:
+When the user clicks the “Trends” cell menu option, open the existing Trends drilldown and replace ONLY the bottom-right “Exposure by Equity Symbol” bar chart with a Product grid populated by EQ_GREEK_PRODUCT_GRID.
+
+Keep the top Trends line chart and bottom-left Equity Symbol grid unchanged. Do not modify the existing “Drilldown by Product” behavior.
+
+API request structure shown in the reference:
+{
+  "module": "EQ_GREEK_DASHBOARD",
+  "apiCode": "EQ_GREEK_PRODUCT_GRID",
+  "cob": "20260911",
+  "format": "JSON",
+  "params": {
+    "region": "AMER",
+    "volckerDesk": "Deriv - Exotics",
+    "greek": "Delta",
+    "period": "daily"
+  }
+}
+
+These are example values only. Build the actual request dynamically using the selected COB, clicked row/cell context, selected Greek, period, region, and Volcker desk. Follow the same parameter mapping as “Drilldown by Product”; do not hardcode screenshot values.
+
+Implementation requirements:
+1. Trace the Trends menu handler through the drilldown component and integrate the Product grid request into that flow.
+2. Reuse the existing Product grid component/configuration and API response mapping, including its columns and formatting.
+3. Render the Product grid in the space currently occupied by the bottom-right Equity Symbol chart, with an appropriate Product heading and selected COB.
+4. Use API data only—remove any mock-data fallback for this new grid.
+5. Handle loading, empty responses, and API failures using existing application patterns.
+6. Refresh the Product grid when its relevant context changes, avoid duplicate requests, and prevent stale responses from showing data for a previously selected context.
+7. Remove the replaced chart’s rendering and any requests used exclusively by that chart. Preserve shared requests needed by the remaining Equity Symbol grid or Trends chart.
+
+Implement the changes, then summarize the modified files and verify that clicking Trends sends EQ_GREEK_PRODUCT_GRID with the correct dynamic payload and displays its response in the bottom-right Product grid.
