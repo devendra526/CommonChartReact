@@ -1,0 +1,41 @@
+Add two dropdown filters—Region and Volcker Desk—to the Global Equities Greek Dashboard drilldown tabs opened from these cell menu options:
+1. Drilldown by Equity Symbol
+2. Drilldown by Product
+3. Trends
+
+Placement and design:
+- Place the filters directly below the tab navigation and above the chart/grid content, aligned to the left.
+- Show Region first, followed by Volcker Desk, in one compact row.
+- Use small labels above each dropdown, white backgrounds, subtle grey borders, rounded corners, and dropdown chevrons.
+- Match the existing blue/white dashboard theme.
+- Use approximately 36px control height, 160px Region width, 240px Volcker Desk width, and 12–16px spacing.
+- Make Volcker Desk searchable, with a scrollable options list and a selected-item indicator.
+- Include keyboard support and visible focus styling.
+- Ensure dropdown menus appear above charts/grids without clipping and controls wrap neatly on smaller screens.
+- Reuse existing UI components and avoid new dependencies.
+
+Data and initial selection:
+- Use mock data only for dropdown options until the options API is ready.
+- Example regions: AMER, EMEA, APAC.
+- Example desks: Deriv - Exotics, Deriv - SES, Cash Equities.
+- Keep mock options in a separate typed provider/service using { label, value }, making future API integration straightforward.
+- Initialize selected values from the clicked row/cell context that opened the tab.
+- Preserve the initial Region and Desk even if they are missing from the mock options.
+- Maintain independent filter state for each drilldown tab and preserve selections when switching tabs.
+
+Behavior:
+- Make desk options dependent on Region using a mock region-to-desk mapping.
+- When Region changes, retain the selected desk if valid; otherwise select the first available desk. Handle empty options gracefully.
+- Update Region and Desk together before requesting data to avoid invalid parameter combinations.
+- Connect these selections to the existing drilldown data-loading flow and refresh the relevant charts/grids.
+- Preserve COB, Greek, period, and other required request parameters.
+- Continue using existing APIs for chart/grid data; do not introduce mock chart/grid data.
+- Avoid duplicate requests and stale responses when filters change quickly.
+- Preserve existing loading, empty, and error states.
+
+Implementation:
+- Inspect how the three drilldown tabs are created and implement one shared filter component.
+- Apply this change only to these drilldown tabs.
+- Preserve the Summary tab, existing drilldown functionality, and current chart/grid layouts, including any Product grid already integrated into Trends.
+- Implement the changes and provide complete updated files.
+- Briefly identify where to replace the mock dropdown provider once the options API is ready.
