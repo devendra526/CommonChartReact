@@ -1,0 +1,48 @@
+ Fix the existing Region and Volcker Desk dropdowns in the Equity Symbol, Product, and Trends drilldown tabs.
+
+Current issues:
+- An unwanted rectangular input/box appears inside the Region dropdown.
+- The selected Region is not displayed inside its own dropdown; it overlaps the Volcker Desk label.
+- Changing Volcker Desk refreshes the grid. This is not required at this stage.
+
+Required fixes:
+
+1. Correct dropdown rendering:
+- Inspect the existing dropdown markup, component configuration, and CSS to identify the root cause.
+- Remove the unwanted nested box or duplicate input border while preserving an accessible keyboard-focus indicator.
+- Display the selected Region inside the Region control.
+- Display the selected desk inside the Volcker Desk control.
+- Keep “REGION” and “VOLCKER DESK” as separate static labels.
+- Fix widths, flex shrinking, positioning, and overflow so selected values cannot overlap adjacent labels.
+- Keep the compact navy toolbar, with both label/control pairs aligned on one row.
+- Use a clear chevron and readable selected text. Truncate long desk names with an ellipsis.
+- Ensure required dropdown styles are imported and scope fixes to this toolbar.
+
+2. Correct controlled state:
+- Use separate selectedRegion and selectedVolckerDesk values with correctly mapped value/onChange props.
+- Match the dropdown component’s expected value format: primitive value or option object.
+- Selecting an option must immediately display its label in the correct dropdown and close the menu.
+- Initialize values from the drilldown’s opening context only once per tab; do not overwrite subsequent selections on rerender.
+- Preserve independent selections when switching between drilldown tabs.
+
+3. Mock dropdown behavior ONLY:
+- Use local mock Region options: AMER, EMEA, APAC.
+- Use a separate mock region-to-desk mapping.
+- On Region change, update only the selected Region and available desk options. Keep the selected desk if valid; otherwise select the first available desk.
+- On Volcker Desk change, update only its dropdown selection.
+- Keep this mock provider separate so an options API can be integrated later.
+
+IMPORTANT: This supersedes the earlier requirement to refresh chart/grid data on dropdown changes.
+- Do not make API calls, refetch data, refresh/remount grids or charts, or apply client-side data filtering when either dropdown changes.
+- Do not update tab titles, chart headings, or the original drilldown request context from these temporary selections.
+- Keep mock dropdown state separate from the applied drilldown context and data-fetch dependencies.
+- Preserve normal initial chart/grid loading when a drilldown opens and existing unrelated refresh behavior.
+- Do not add an Apply button or connect the dropdowns to data loading yet.
+
+Verify:
+- Region values appear inside the Region dropdown without any extra box or overlap.
+- Desk values appear inside the desk dropdown.
+- Region changes correctly update the mock desk options.
+- Changing either dropdown causes no network request, data reload, or grid/chart remount.
+
+Implement the fixes and provide complete updated files.
