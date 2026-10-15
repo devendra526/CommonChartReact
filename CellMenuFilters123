@@ -1,0 +1,36 @@
+Refine the existing Region and Volcker Desk filters in the Global Equities Greek Dashboard drilldown tabs: Drilldown by Equity Symbol, Drilldown by Product, and Trends.
+
+The current filters are oversized and the options appear like an unstyled list. Replace them with proper compact dropdowns, using a uniform design inspired by the existing VaR Summary filter toolbar.
+
+Design requirements:
+- Place one compact dark-navy filter toolbar below the tab navigation and above the charts/grids.
+- Match the existing VaR Summary toolbar’s colours, typography, border radius, and spacing. Reuse its styles where possible.
+- Use actual single-select dropdowns, not button groups.
+- Display labels and selected values inline:
+  REGION  [AMER ▾]    VOLCKER DESK  [Deriv - Exotics ▾]
+- Keep labels small, uppercase, and muted light blue.
+- Use compact dropdown controls approximately 30–32px high, with subtle borders, rounded corners, readable text, and a clear chevron.
+- Region width: approximately 120px; Volcker Desk width: approximately 190–220px.
+- Avoid large inputs, labels stacked above controls, excessive padding, or oversized filter cards.
+- Show options only when the dropdown opens, in a properly styled floating menu with no bullet points.
+- Use a white menu background, dark text, blue selected-item styling, hover feedback, and a subtle shadow.
+- Ensure menus overlay charts/grids without clipping or shifting page content.
+- Reuse an existing accessible dropdown component and verify its required styles are imported. Scope CSS to avoid affecting other filters.
+
+Mock data and selection behavior:
+- Use local mock data for dropdown options only. Do not call an options API yet.
+- Regions: AMER, EMEA, APAC.
+- Provide a mock region-to-desk mapping with options such as Deriv - Exotics, Deriv - SES, and Cash Equities.
+- Keep options in a separate typed file/provider using { label, value }, ready for future API integration.
+- Make both dropdowns controlled components: bind their displayed values to state and update that state through onChange.
+- Initialize selections from the clicked row/cell context when the drilldown tab opens.
+- Preserve the initial context values even if missing from the mock options.
+- Selecting an option must immediately update the displayed value, mark the correct option selected, and close the menu.
+- Changing Region must update the available Volcker Desk options. Retain the current desk if valid; otherwise select the first available desk.
+- Handle an empty desk list with a disabled dropdown and a clear placeholder.
+- Do not reset selections to the initial row values on every render.
+- Keep filter state independent for each tab and retain it when switching tabs.
+
+Preserve existing chart/grid data sources and filter integrations. Mock only the dropdown options, not chart/grid data. If selections already trigger data requests, use the final valid Region/Desk pair and avoid duplicate requests.
+
+Implement one shared filter component for all three drilldown types. Verify opening, selecting, closing, dependent desk updates, and tab switching. Provide complete updated files.
