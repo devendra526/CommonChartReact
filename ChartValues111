@@ -1,0 +1,18 @@
+Update the horizontal bar charts so their numeric values appear just ABOVE each bar, matching the highlighted position in my screenshot.
+
+Requirements:
+
+* Move all existing labels from inside the bars to above them, horizontally centered over the corresponding bar.
+* Leave approximately 4–6px between the label and the bar’s top edge.
+* Apply this consistently to positive, negative, and very small bars.
+* Display the complete formatted value, including its negative sign and existing decimal precision. Do not truncate, wrap, or hide values because a bar is small.
+* Use readable dark text without a text outline.
+* Ensure labels do not overlap category names, neighbouring bars, chart titles, or chart boundaries.
+* Reserve enough space above the first bar and between rows. Adjust bar thickness or chart height where needed.
+* Keep labels within the plot’s horizontal boundaries while maintaining their association with the correct bar.
+* Preserve existing API data, number formatting, colours, tooltips, and interactions.
+* Implement this generically in the shared chart component, scoped to horizontal bar charts.
+* Ensure positioning updates correctly after resizing, fullscreen changes, filtering, and data refreshes.
+* Prefer native Highcharts data labels where possible. If custom positioning is necessary, account for inverted chart coordinates and avoid duplicate labels or render loops.
+
+Verify with mixed positive/negative values, very short bars, and narrow chart cards. Provide the complete updated code for the affected logic.
