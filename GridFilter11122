@@ -1,0 +1,40 @@
+/* Taller list containing the checkbox values. */
+.risk-grid-filter-popup .ag-set-filter-list {
+  height: 280px !important;
+  min-height: 0 !important;
+}
+
+/* Target the scrolling element directly.
+   Works whether it is the list itself or inside the list. */
+.risk-grid-filter-popup .ag-virtual-list-viewport {
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  scrollbar-gutter: stable;
+  scrollbar-width: auto !important;
+  scrollbar-color: #7b8da1 #edf2f7 !important;
+}
+
+/* Chrome / Edge: override rules that hide scrollbars. */
+.risk-grid-filter-popup
+  .ag-virtual-list-viewport::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+}
+
+.risk-grid-filter-popup
+  .ag-virtual-list-viewport::-webkit-scrollbar-track {
+  background: #edf2f7 !important;
+  border-radius: 5px;
+}
+
+.risk-grid-filter-popup
+  .ag-virtual-list-viewport::-webkit-scrollbar-thumb {
+  background: #7b8da1 !important;
+  border: 2px solid #edf2f7;
+  border-radius: 5px;
+}
+
+.risk-grid-filter-popup
+  .ag-virtual-list-viewport::-webkit-scrollbar-thumb:hover {
+  background: #52677f !important;
+}
