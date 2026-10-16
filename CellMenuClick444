@@ -1,0 +1,35 @@
+Fix the cell context-menu drilldown behavior in the Greek Dashboard.
+
+Current issue:
+- Right-clicking a child/desk row’s numeric cell and selecting “Drilldown by Equity Symbol”, “Drilldown by Product”, or “Trends” correctly calls the relevant API.
+- Right-clicking a parent/region row’s numeric cell and selecting the same options does not call the API.
+- Parent-row actions must work even when the row is collapsed and no child row has previously been clicked or loaded.
+
+Investigate and fix:
+1. Trace the working child-row flow from context-menu creation through the action handler, tab creation, payload construction, and API invocation. Compare it with the parent-row flow.
+2. Check for early returns or validation that incorrectly requires leaf-row data, a Volcker Desk, or rejects group/parent nodes.
+3. Inspect the actual row structure. Parent/group nodes may not expose the same data fields as child rows. Resolve the region from the available row data, grouping key, or ancestor context as appropriate.
+4. Capture the right-clicked row and column context directly. Do not depend on a previously selected cell, selected child row, or stale state.
+5. Resolve the Greek/metric from the clicked column and preserve the selected COB, period, and other required request parameters.
+
+Payload requirements:
+- Child row: retain the existing Region + Volcker Desk behavior.
+- Parent region row: send the selected Region with the backend-supported representation for all desks.
+- Inspect existing API contracts or working region-level requests to determine whether Volcker Desk should be omitted, null, empty, or an established “all” value. Do not invent a value or select the first child desk.
+- Handle aggregate rows such as Global according to their existing backend mapping.
+- If the parent-level API contract cannot be determined, identify the exact missing requirement instead of silently returning or fabricating a payload.
+
+Expected behavior:
+- Each of the three menu actions opens/activates the appropriate drilldown tab and loads real API data for the clicked parent or child scope.
+- Parent and child contexts must have distinct tab/cache identities where needed so an existing child tab cannot suppress a parent request.
+- Do not trigger requests merely by opening the context menu.
+- Avoid duplicate requests and preserve existing loading/error handling.
+- Keep the temporary Region/Volcker Desk dropdown changes UI-only; this fix concerns cell-menu actions, not dropdown-triggered refreshes.
+
+Verify all three actions on:
+- A collapsed parent region row before expanding it.
+- An expanded parent region row.
+- A child desk row.
+- A parent row after previously using a different child row, to catch stale context.
+
+Implement the fix, explain the actual root cause, and provide the complete updated files. Confirm the resulting parent and child request payloads.
