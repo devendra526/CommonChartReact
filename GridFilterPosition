@@ -1,0 +1,162 @@
+import type { PostProcessPopupParams } from 'ag-grid-community';
+
+import './DataGrid.css';
+import './GridFilters.css';
+
+/*
+ * Place this function outside the DataGrid component.
+ *
+ * - Prefers opening below the filter icon.
+ * - Opens above when insufficient space exists below.
+ * - Adjusts list height to the available screen space.
+ * - Keeps scrolling inside the checkbox list.
+ */
+function positionFilterPopup(
+  params: PostProcessPopupParams,
+): void {
+  const source = params.eventSource;
+  if (!source) return;
+
+  const filterCell = source.closest<HTMLElement>(
+    '.ag-header-cell.ag-floating-filter',
+  );
+
+  // Leave context menus and other popups unchanged.
+  if (!filterCell) return;
+
+  const popup = params.ePopup;
+  popup.classList.add('risk-grid-filter-popup');
+
+  requestAnimationFrame(() => {
+    if (!popup.isConnected || !filterCell.isConnected) return;
+
+    const list = popup.querySelector<HTMLElement>(
+      '.ag-set-filter-list',
+    );
+
+    if (!list) return;
+
+    const gap = 6;
+    const edge = 10;
+    const preferredListHeight = 280;
+
+    const viewportHeight =
+      document.documentElement.clientHeight;
+
+    const viewportWidth =
+      document.documentElement.clientWidth;
+
+    const cellRect = filterCell.getBoundingClientRect();
+    const iconRect = source.getBoundingClientRect();
+
+    // Remove previous outer scrolling/height restrictions.
+    popup.style.overflow = 'hidden';
+    popup.style.maxHeight = 'none';
+    popup.style.maxWidth = `${
+      Math.max(0, viewportWidth - edge * 2)
+    }px`;
+
+    // Start with the preferred height to measure the fixed content.
+    list.style.setProperty(
+      'height',
+      `${preferredListHeight}px`,
+      'important',
+    );
+
+    const initialPopupRect = popup.getBoundingClientRect();
+    const initialListRect = list.getBoundingClientRect();
+
+    // Search, buttons, margins, padding and borders.
+    const fixedContentHeight = Math.max(
+      0,
+      initialPopupRect.height - initialListRect.height,
+    );
+
+    const spaceBelow = Math.max(
+      0,
+      viewportHeight - cellRect.bottom - gap - edge,
+    );
+
+    const spaceAbove = Math.max(
+      0,
+      cellRect.top - gap - edge,
+    );
+
+    // Prefer below; use above if it provides more useful space.
+    const openAbove =
+      spaceBelow < fixedContentHeight + 100 &&
+      spaceAbove > spaceBelow;
+
+    const availableHeight = openAbove
+      ? spaceAbove
+      : spaceBelow;
+
+    const listHeight = Math.max(
+      0,
+      Math.min(
+        preferredListHeight,
+        availableHeight - fixedContentHeight - 2,
+      ),
+    );
+
+    list.style.setProperty(
+      'height',
+      `${listHeight}px`,
+      'important',
+    );
+
+    // Measure again after resizing the list.
+    const popupRect = popup.getBoundingClientRect();
+
+    const desiredTop = openAbove
+      ? Math.max(
+          edge,
+          cellRect.top - gap - popupRect.height,
+        )
+      : cellRect.bottom + gap;
+
+    const desiredLeft = Math.max(
+      edge,
+      Math.min(
+        iconRect.left,
+        viewportWidth - popupRect.width - edge,
+      ),
+    );
+
+    // Adjust AG Grid's existing coordinates.
+    const currentLeft =
+      Number.parseFloat(popup.style.left) || 0;
+
+    const currentTop =
+      Number.parseFloat(popup.style.top) || 0;
+
+    popup.style.left = `${
+      currentLeft + desiredLeft - popupRect.left
+    }px`;
+
+    popup.style.top = `${
+      currentTop + desiredTop - popupRect.top
+    }px`;
+  });
+}
+
+/*
+KEEP THESE EXISTING INTEGRATION SETTINGS:
+
+Wrapper:
+  className={`${rootClassName ?? ''} left-filter-grid`}
+
+AgGridReact props:
+  icons={GRID_FILTER_ICONS}
+  popupParent={document.body}
+  postProcessPopup={positionFilterPopup}
+
+Keep your existing:
+  - GRID_FILTER_ICONS constant
+  - filteredColumnDefs
+  - filteredAutoGroupColumnDef
+  - Reset/Apply and excelMode filter settings
+
+If postProcessPopup already contains other logic, call this
+function at the end of that callback instead of passing two props.
+*/
