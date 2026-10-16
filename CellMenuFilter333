@@ -1,0 +1,37 @@
+In the Greek Dashboard, reuse the existing Region and Volcker Desk filter panel inside the application tabs opened by these cell-menu actions:
+1. Drilldown by Equity Symbol
+2. Drilldown by Product
+3. Trends
+
+Inspect the existing dashboard filter panel, tab creation logic, and drilldown/Trends components, then implement the following:
+
+SHARED FILTER PANEL
+- Reuse or extract the existing filter panel into a shared component. Preserve its existing styling, control types, sizing, spacing, options, and selection behaviour.
+- Place the panel below the application tab navigation and above the content inside each drilldown/Trends tab.
+- Avoid duplicating the filter UI or creating a different design.
+
+EXPLICIT FILTER CONFIGURATION
+- Allow each consuming view to explicitly specify which filters it displays, using stable filter IDs, for example:
+  enabledFilters={['region', 'volckerDesk']}
+- All three drilldown/Trends views must display ONLY Region and Volcker Desk.
+- Adding another filter to the main dashboard panel must NOT automatically display it in drilldown/Trends tabs. Additional filters must require explicit opt-in for those views.
+- Filter visibility must be controlled through configuration, not CSS hiding or scattered checks for tab names.
+- Preserve all existing filters and behaviour on the main dashboard.
+
+TAB-SPECIFIC STATE
+- Initialise each new tab’s Region and Volcker Desk from the clicked row/drilldown context when available; otherwise, use the current dashboard selections.
+- Keep subsequent filter selections independent for each tab, keyed by its stable tab ID.
+- Changing filters in one tab must not change the main dashboard or another tab.
+- Preserve selections when switching between open tabs.
+- Ensure each control displays and updates its own selected value correctly.
+
+DATA INTEGRATION
+- Reuse existing filter options and any existing Region-to-Volcker-Desk dependency logic.
+- Inspect how the existing drilldown/Trends data flow accepts filters. Where supported, apply the selected Region and Volcker Desk only to that tab’s data request while preserving its metric, dates, drilldown type, and other required context.
+- Avoid conflicting duplicate Region/Desk values in request parameters.
+- Do not invent API parameters or replace existing API data with mock data. If backend support is missing, keep the controls working with local tab state and clearly identify the pending integration.
+- Avoid refreshing unrelated grids, recreating tabs, or making duplicate requests.
+
+Verify all three menu actions, opening multiple tabs, switching tabs, and changing both filters. Also verify that adding a new dashboard filter does not make it appear in drilldown/Trends tabs without explicit configuration.
+
+Implement the changes and provide the complete updated code for affected files, with a brief explanation of the shared component and per-tab state management.
