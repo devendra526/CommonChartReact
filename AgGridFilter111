@@ -1,0 +1,42 @@
+Replace the basic AG Grid column filter (“Contains” and text input) with a reusable searchable checkbox filter in my React application.
+
+First inspect the installed AG Grid version, Community/Enterprise setup, grid wrapper, column definitions and row model. Use APIs compatible with the installed version.
+
+Implementation approach:
+
+* If licensed AG Grid Enterprise is already configured, use its native Set Filter.
+* Otherwise, implement a reusable custom column filter using our existing dependencies. Do not introduce the custom library used by my other application or add Enterprise dependencies.
+* Enable this through column configuration so it can be reused across grids without hardcoding column names.
+
+Required behavior:
+
+1. Clicking a column’s filter icon opens a compact popup anchored to that header.
+2. Show a search input followed by unique values from that particular column, each with a checkbox.
+3. Include Select All with checked, unchecked and indeterminate states.
+4. Search should be case-insensitive and narrow only the checkbox list. Typing must not filter the grid or lose selections.
+5. While searching, Select All should affect only matching values and preserve selections outside the search results.
+6. Include Apply and Reset buttons. Checkbox changes remain pending until Apply. Apply filters the grid and closes the popup. Reset clears this column’s filter and search, restoring all values as selected.
+7. Closing without Apply should discard pending changes. Reopening should show the applied selections.
+8. Selected values within one column use OR matching; filters across different columns combine with AND.
+9. All values selected means no restriction; no values selected means no matching rows.
+10. Highlight the header filter icon when a filter is active.
+
+Data handling:
+
+* Use actual column values, including existing value getters and formatted display labels. Preserve underlying values for matching.
+* Deduplicate values, sort appropriately, and display empty values as “(Blanks)”.
+* For client-side data, obtain values from the full loaded dataset, not just the current pagination page.
+* For server-side or infinite loading, do not assume loaded rows contain all possible values. Reuse an existing distinct-values API if available; otherwise identify the required backend contract clearly.
+* Preserve valid applied selections when data refreshes.
+* Keep filter state isolated by grid instance and column.
+
+Design:
+
+* Match the existing grid theme and compact font sizes.
+* Use a white popup approximately 240–280px wide, subtle border/shadow, blue checkboxes, scrollable values and a fixed footer.
+* Position it within the viewport without clipping or shifting the grid.
+* Support keyboard navigation, accessible labels, Escape to close, and “No matching values” for an empty search result.
+
+Preserve existing sorting, pagination, row selection, context menus and other column filters. Use AG Grid’s filter lifecycle/model rather than manually replacing rowData.
+
+Implement the complete solution and provide all changed files, including styling and an example column configuration. Verify search, multi-selection, Apply/Reset, reopening, combined column filters and data refresh.
