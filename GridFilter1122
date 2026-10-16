@@ -1,0 +1,35 @@
+/* Taller checkbox list; popup grows with it. */
+.risk-grid-filter-popup .ag-set-filter-list {
+  height: 280px !important;
+  min-height: 0;
+}
+
+/* Scroll the values inside AG Grid's virtual list. */
+.risk-grid-filter-popup .ag-set-filter-list .ag-virtual-list-viewport {
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+/* Chrome / Edge scrollbar appearance. */
+.risk-grid-filter-popup
+  .ag-set-filter-list
+  .ag-virtual-list-viewport::-webkit-scrollbar {
+  width: 8px;
+}
+
+.risk-grid-filter-popup
+  .ag-set-filter-list
+  .ag-virtual-list-viewport::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.risk-grid-filter-popup
+  .ag-set-filter-list
+  .ag-virtual-list-viewport::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border: 2px solid #f1f5f9;
+  border-radius: 6px;
+}
