@@ -1,0 +1,26 @@
+/* Prevent horizontal overflow while retaining vertical scrolling. */
+.risk-grid-filter-popup {
+  box-sizing: border-box;
+  overflow-x: hidden !important;
+}
+
+.risk-grid-filter-popup .ag-filter,
+.risk-grid-filter-popup .ag-filter-wrapper,
+.risk-grid-filter-popup .ag-set-filter {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0 !important;
+  max-width: 100%;
+}
+
+.risk-grid-filter-popup .ag-mini-filter,
+.risk-grid-filter-popup .ag-input-wrapper {
+  min-width: 0 !important;
+}
+
+.risk-grid-filter-popup .ag-filter-apply-panel {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+}
