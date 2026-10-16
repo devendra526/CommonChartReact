@@ -1,0 +1,380 @@
+/* ==========================================================
+   FILE 1: DataGrid.tsx
+   ========================================================== */
+
+// Merge these with your existing imports.
+import type { PostProcessPopupParams } from 'ag-grid-community';
+import './DataGrid.css';
+
+/* Place this constant OUTSIDE your DataGrid component.
+   Replace your earlier GRID_FILTER_ICONS declaration. */
+const GRID_FILTER_ICONS = {
+  filter: `
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M3 4h18l-7 8v7l-4 2v-9L3 4z" />
+    </svg>
+  `,
+};
+
+/* Place this function OUTSIDE your DataGrid component.
+   Replace your earlier positionFilterPopup function. */
+function positionFilterPopup(
+  params: PostProcessPopupParams,
+): void {
+  const source = params.eventSource;
+
+  if (!source) return;
+
+  const filterCell = source.closest<HTMLElement>(
+    '.ag-header-cell.ag-floating-filter',
+  );
+
+  // Only customise popups opened from the floating-filter row.
+  if (!filterCell) return;
+
+  const popup = params.ePopup;
+
+  // Attach styling directly because the popup is under document.body.
+  popup.classList.add('risk-grid-filter-popup');
+
+  requestAnimationFrame(() => {
+    if (!popup.isConnected || !filterCell.isConnected) return;
+
+    const gap = 6;
+    const edgePadding = 10;
+
+    const cellRect = filterCell.getBoundingClientRect();
+    const iconRect = source.getBoundingClientRect();
+
+    const viewportWidth = document.documentElement.clientWidth;
+    const viewportHeight = document.documentElement.clientHeight;
+
+    const desiredTop = cellRect.bottom + gap;
+    const availableHeight =
+      viewportHeight - desiredTop - edgePadding;
+
+    // Retain AG Grid's placement if no room exists below the row.
+    if (availableHeight <= 0) return;
+
+    popup.style.maxHeight = `${availableHeight}px`;
+    popup.style.maxWidth = `${
+      viewportWidth - edgePadding * 2
+    }px`;
+    popup.style.overflowY = 'auto';
+    popup.style.boxSizing = 'border-box';
+
+    const popupRect = popup.getBoundingClientRect();
+
+    // Align under the icon unless that would exceed the screen edge.
+    const desiredLeft = Math.max(
+      edgePadding,
+      Math.min(
+        iconRect.left,
+        viewportWidth - popupRect.width - edgePadding,
+      ),
+    );
+
+    // Adjust the existing position without assuming parent coordinates.
+    const currentLeft =
+      Number.parseFloat(popup.style.left) || 0;
+
+    const currentTop =
+      Number.parseFloat(popup.style.top) || 0;
+
+    popup.style.left = `${
+      currentLeft + desiredLeft - popupRect.left
+    }px`;
+
+    popup.style.top = `${
+      currentTop + desiredTop - popupRect.top
+    }px`;
+  });
+}
+
+/*
+   INSIDE YOUR EXISTING DataGrid COMPONENT:
+
+   1. Add "left-filter-grid" to your EXISTING wrapper className.
+      Keep its existing classes, height and styles.
+
+   2. Add the icons, popupParent and postProcessPopup props.
+      Keep all your other existing AgGridReact props.
+
+   Example integration — merge into your existing JSX:
+
+   <div className="left-filter-grid">
+     <AgGridReact<GridRow>
+       columnDefs={filteredColumnDefs}
+       icons={GRID_FILTER_ICONS}
+       popupParent={document.body}
+       postProcessPopup={positionFilterPopup}
+
+       ...KEEP YOUR OTHER EXISTING PROPS...
+     />
+   </div>
+
+   Do not paste the "...KEEP..." placeholder into JSX.
+
+   If you already have postProcessPopup, call
+   positionFilterPopup(params) at the END of that callback.
+
+   If you already pass other custom icons, merge the filter
+   entry into your existing icons object.
+
+   SELECT ALL:
+   In agGridSetFilters.ts, ensure this line uses false:
+
+   suppressSelectAll: options.hideSelectAll ?? false,
+*/
+
+
+/* ==========================================================
+   FILE 2: DataGrid.css
+
+   Paste everything BELOW into your CSS file.
+   Replace the earlier left-filter-grid CSS with this block.
+   ========================================================== */
+
+/* ---------- Floating-filter row ---------- */
+
+.left-filter-grid .ag-header-cell.ag-floating-filter {
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* Hide only the inline summary/input.
+   The search input inside the popup remains visible. */
+.left-filter-grid .ag-floating-filter-body {
+  order: 2;
+  flex: 1 1 auto;
+  min-width: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Position the funnel on the left. */
+.left-filter-grid .ag-floating-filter-button {
+  order: 1;
+  flex: 0 0 26px;
+  width: 26px;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.left-filter-grid .ag-floating-filter-button-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 4px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #52676b;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.left-filter-grid .ag-floating-filter-button-button:hover {
+  background-color: #e8f2f8;
+  color: #087eae;
+}
+
+.left-filter-grid .ag-floating-filter-button-button svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.left-filter-grid
+  .ag-floating-filter-button-button:focus-visible {
+  outline: 2px solid #1684b8;
+  outline-offset: 2px;
+}
+
+
+/* ---------- Popup container ---------- */
+
+/* Do not prefix these rules with .left-filter-grid.
+   popupParent places the popup outside that wrapper. */
+.risk-grid-filter-popup {
+  --ag-font-size: 13px;
+  --ag-background-color: #ffffff;
+  --ag-foreground-color: #243746;
+  --ag-border-color: #d8e2eb;
+  --ag-input-focus-border-color: #1684b8;
+  --ag-checkbox-checked-color: #0785b5;
+
+  width: 300px;
+  min-width: 0 !important;
+  border: 1px solid #d8e2eb !important;
+  border-radius: 10px !important;
+  background: #ffffff;
+  color: #243746;
+  box-shadow:
+    0 10px 30px rgba(23, 43, 77, 0.16),
+    0 2px 6px rgba(23, 43, 77, 0.08);
+}
+
+.risk-grid-filter-popup .ag-filter,
+.risk-grid-filter-popup .ag-filter-wrapper,
+.risk-grid-filter-popup .ag-set-filter {
+  min-width: 0 !important;
+  background-color: #ffffff;
+}
+
+
+/* ---------- Search input ---------- */
+
+.risk-grid-filter-popup .ag-mini-filter {
+  margin: 12px;
+}
+
+.risk-grid-filter-popup
+  .ag-mini-filter
+  .ag-input-wrapper {
+  min-height: 36px;
+  border: 1px solid #cad6e2;
+  border-radius: 6px;
+  background-color: #ffffff;
+  box-shadow: none;
+}
+
+.risk-grid-filter-popup
+  .ag-mini-filter
+  .ag-input-wrapper:focus-within {
+  border-color: #1684b8;
+  box-shadow: 0 0 0 2px rgba(22, 132, 184, 0.14);
+}
+
+.risk-grid-filter-popup
+  .ag-mini-filter
+  .ag-input-field-input {
+  font-size: 13px;
+  color: #243746;
+}
+
+.risk-grid-filter-popup
+  .ag-mini-filter
+  .ag-input-field-input::placeholder {
+  color: #7b8998;
+}
+
+
+/* ---------- Checkbox list ---------- */
+
+/* Row height continues to come from cellHeight in the helper.
+   Do not override virtual-list row heights through CSS. */
+.risk-grid-filter-popup .ag-set-filter-list {
+  margin: 0 8px 8px;
+}
+
+.risk-grid-filter-popup .ag-set-filter-item {
+  padding-left: 8px;
+  padding-right: 8px;
+  border-radius: 4px;
+}
+
+.risk-grid-filter-popup .ag-set-filter-item:hover {
+  background-color: #f0f6fb;
+}
+
+.risk-grid-filter-popup .ag-set-filter-item-checkbox {
+  min-width: 0;
+}
+
+.risk-grid-filter-popup .ag-set-filter-item .ag-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #33465a;
+  font-size: 13px;
+}
+
+.risk-grid-filter-popup .ag-set-filter-select-all {
+  font-weight: 600;
+}
+
+.risk-grid-filter-popup .ag-filter-no-matches {
+  color: #718096;
+}
+
+
+/* ---------- Reset / Apply buttons ---------- */
+
+/* These button styles assume the helper uses:
+   buttons: ['reset', 'apply'] */
+.risk-grid-filter-popup .ag-filter-apply-panel {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid #e5ebf1;
+  background-color: #f8fafc;
+}
+
+.risk-grid-filter-popup .ag-filter-apply-panel-button {
+  min-width: 72px;
+  min-height: 32px;
+  margin: 0 !important;
+  padding: 6px 14px;
+  border: 1px solid #cbd6e2;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #40566c;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Reset */
+.risk-grid-filter-popup
+  .ag-filter-apply-panel-button:first-child:hover:not(:disabled) {
+  background-color: #edf3f8;
+  border-color: #aabccd;
+}
+
+/* Apply — second/last button in ['reset', 'apply'] */
+.risk-grid-filter-popup
+  .ag-filter-apply-panel-button:last-child {
+  border-color: #087fae;
+  background: #087fae;
+  color: #ffffff;
+}
+
+.risk-grid-filter-popup
+  .ag-filter-apply-panel-button:last-child:hover:not(:disabled) {
+  border-color: #06688f;
+  background: #06688f;
+}
+
+.risk-grid-filter-popup
+  .ag-filter-apply-panel-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.risk-grid-filter-popup
+  .ag-filter-apply-panel-button:focus-visible {
+  outline: 2px solid #1684b8;
+  outline-offset: 2px;
+}
