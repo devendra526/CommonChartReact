@@ -1,0 +1,385 @@
+import type {
+  ColDef,
+  ColGroupDef,
+  ISetFilterParams,
+  ValueFormatterFunc,
+} from 'ag-grid-community';
+
+/**
+ * Creates a number formatter for both grid cells and filter values.
+ *
+ * divisor: 1
+ * Use when API values are already in millions.
+ * Example: 2.62344 -> 2.62
+ *
+ * divisor: 1_000_000
+ * Use when API values are in dollars.
+ * Example: 2623440 -> 2.62
+ *
+ * Formatting does not change the underlying row data.
+ */
+export function createNumberFormatter<TData = unknown>(
+  options: {
+    divisor?: number;
+    decimals?: number;
+    locale?: string;
+    useGrouping?: boolean;
+  } = {},
+): ValueFormatterFunc<TData> {
+  const {
+    divisor = 1,
+    decimals = 2,
+    locale = 'en-US',
+    useGrouping = true,
+  } = options;
+
+  if (!Number.isFinite(divisor) || divisor <= 0) {
+    throw new Error('divisor must be a positive finite number.');
+  }
+
+  if (
+    !Number.isInteger(decimals) ||
+    decimals < 0 ||
+    decimals > 20
+  ) {
+    throw new Error('decimals must be an integer between 0 and 20.');
+  }
+
+  const numberFormatter = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+    useGrouping,
+  });
+
+  return ({ value }) => {
+    if (
+      value == null ||
+      (typeof value === 'string' && value.trim() === '')
+    ) {
+      return '';
+    }
+
+    if (
+      typeof value !== 'number' &&
+      typeof value !== 'string'
+    ) {
+      return String(value);
+    }
+
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) {
+      return String(value);
+    }
+
+    const scaledValue = numericValue / divisor;
+
+    // Avoid displaying -0.00 for small negative numbers.
+    const displayValue =
+      Number(scaledValue.toFixed(decimals)) === 0
+        ? 0
+        : scaledValue;
+
+    return numberFormatter.format(displayValue);
+  };
+}
+
+export interface SetFilterOptions<TData> {
+  /**
+   * Optional formatters for specific columns.
+   * Keys must match colId, or field when colId is not defined.
+   * Do not use headerName: COB/PCOB headers may repeat.
+   *
+   * These formatters apply to both cells and filter labels.
+   */
+  formatters?: Readonly<
+    Record<string, ValueFormatterFunc<TData>>
+  >;
+
+  /**
+   * Optional formatter inherited from defaultColDef.
+   * Must work using params.value without needing params.data/node.
+   */
+  defaultValueFormatter?: ValueFormatterFunc<TData>;
+
+  /**
+   * true hides Select All, matching your third screenshot.
+   * Set false if you want Select All.
+   */
+  hideSelectAll?: boolean;
+}
+
+/**
+ * Adds searchable Set Filters with Reset/Apply buttons.
+ *
+ * Supports nested column groups, including COB/PCOB groups.
+ * Preserves existing cell renderers, getters and other column options.
+ * Leaves filter:false and explicitly configured other filters unchanged.
+ *
+ * Requires AG Grid Enterprise Set Filter.
+ * Your first screenshot already shows this filter.
+ */
+export function withSetFilters<TData>(
+  definitions: ReadonlyArray<
+    ColDef<TData> | ColGroupDef<TData>
+  >,
+  options: SetFilterOptions<TData> = {},
+): Array<ColDef<TData> | ColGroupDef<TData>> {
+  return definitions.map((definition) => {
+    // Recursively process grouped columns.
+    if ('children' in definition) {
+      return {
+        ...definition,
+        children: withSetFilters(
+          definition.children,
+          options,
+        ),
+      };
+    }
+
+    const column = definition;
+
+    // Preserve disabled filters and other explicit filter types.
+    if (
+      column.filter === false ||
+      (
+        column.filter != null &&
+        column.filter !== true &&
+        column.filter !== 'agSetColumnFilter'
+      )
+    ) {
+      return { ...column };
+    }
+
+    const columnId = column.colId ?? column.field;
+
+    const overrideFormatter =
+      columnId == null
+        ? undefined
+        : options.formatters?.[columnId];
+
+    const existingFormatter =
+      typeof column.valueFormatter === 'function'
+        ? column.valueFormatter
+        : undefined;
+
+    const displayFormatter =
+      overrideFormatter ??
+      existingFormatter ??
+      options.defaultValueFormatter;
+
+    const existingFilterParams = (
+      column.filterParams ?? {}
+    ) as Partial<ISetFilterParams<TData>>;
+
+    const filterParams: Partial<ISetFilterParams<TData>> = {
+      ...existingFilterParams,
+
+      // Buttons displayed at the bottom of the popup.
+      buttons: ['reset', 'apply'],
+
+      // Close popup after applying the filter.
+      closeOnApply: true,
+
+      // Show search box.
+      suppressMiniFilter: false,
+
+      // Hide Select All by default, as in your reference.
+      suppressSelectAll: options.hideSelectAll ?? true,
+
+      // Searching should narrow the checklist.
+      // It should not immediately apply a grid filter.
+      applyMiniFilterWhileTyping: false,
+
+      // Space between checkbox rows.
+      cellHeight: 36,
+    };
+
+    if (displayFormatter) {
+      filterParams.valueFormatter = (params) => {
+        if (
+          params.value == null ||
+          params.value === ''
+        ) {
+          return '(Blanks)';
+        }
+
+        return displayFormatter(params);
+      };
+    }
+
+    return {
+      ...column,
+
+      // Explicit formatter overrides affect cell text too.
+      ...(overrideFormatter
+        ? { valueFormatter: overrideFormatter }
+        : {}),
+
+      filter: 'agSetColumnFilter',
+      floatingFilter: true,
+      filterParams,
+    };
+  });
+}
+
+/*
+============================================================
+HOW TO USE IN YOUR EXISTING DataGrid.tsx
+============================================================
+
+STEP 1: Add these imports.
+
+If useMemo is already imported, do not import it twice.
+
+import { useMemo } from 'react';
+
+import {
+  withSetFilters,
+  createNumberFormatter,
+} from './agGridSetFilters';
+
+
+STEP 2: Choose OPTION A or OPTION B below.
+Do not add both.
+
+------------------------------------------------------------
+OPTION A: Your columns already use valueFormatter
+------------------------------------------------------------
+
+Inside DataGrid, AFTER your existing columnDefs declaration:
+
+const filteredColumnDefs = useMemo(
+  () => withSetFilters<GridRow>(columnDefs),
+  [columnDefs],
+);
+
+This reuses each column's existing function valueFormatter
+for the values displayed in its filter popup.
+
+IMPORTANT:
+The formatter must work using params.value.
+Set Filter does not provide a row's params.data or params.node.
+
+If your formatter needs row data, use Option B with a
+value-only formatter.
+
+------------------------------------------------------------
+OPTION B: Formatting is currently done inside cellRenderer,
+or you want to explicitly configure numeric formatting
+------------------------------------------------------------
+
+Inside DataGrid:
+
+const filterFormatters = useMemo(() => {
+  const amountFormatter = createNumberFormatter<GridRow>({
+    divisor: 1,
+    decimals: 2,
+    useGrouping: true,
+  });
+
+  return {
+    // REPLACE these example keys with your actual colId.
+    // If no colId is defined, use the column's field.
+    mcCob: amountFormatter,
+    mcPcob: amountFormatter,
+    mcDiff: amountFormatter,
+    svarCob: amountFormatter,
+    svarPcob: amountFormatter,
+    svarDiff: amountFormatter,
+  };
+}, []);
+
+const filteredColumnDefs = useMemo(
+  () =>
+    withSetFilters<GridRow>(columnDefs, {
+      formatters: filterFormatters,
+    }),
+  [columnDefs, filterFormatters],
+);
+
+If a custom cellRenderer currently formats params.value
+itself, use params.valueFormatted for its displayed number,
+keeping your existing styling and other rendered content.
+
+Choose the SAME divisor used by your current cell display:
+
+API 2.62344 already in millions:
+  divisor: 1
+  Displays: 2.62
+
+API 2623440 in dollars:
+  divisor: 1_000_000
+  Displays: 2.62
+
+API 0.012344 already in millions:
+  divisor: 1
+  Displays: 0.01
+
+Do not assume the divisor from the $MM heading alone.
+
+------------------------------------------------------------
+STEP 3: Update ONE prop in your existing AgGridReact
+------------------------------------------------------------
+
+Replace:
+
+columnDefs={columnDefs}
+
+With:
+
+columnDefs={filteredColumnDefs}
+
+Keep all other existing props, including:
+
+- rowData
+- defaultColDef
+- theme
+- treeData
+- getDataPath
+- autoGroupColumnDef
+- pagination
+- grid event handlers
+
+------------------------------------------------------------
+OPTIONAL: SHOW SELECT ALL
+------------------------------------------------------------
+
+const filteredColumnDefs = useMemo(
+  () =>
+    withSetFilters<GridRow>(columnDefs, {
+      hideSelectAll: false,
+    }),
+  [columnDefs],
+);
+
+------------------------------------------------------------
+IMPORTANT NOTES
+------------------------------------------------------------
+
+1. No extra custom UI library is needed.
+
+2. Your current AG Grid theme controls popup colors, borders
+   and icons. Exact styling may differ from screenshot 3.
+
+3. Existing function valueFormatters are reused automatically.
+   String-expression formatters need a function override.
+
+4. Different raw values can round to the same displayed label.
+   They remain separate filter entries because the underlying
+   raw values and filter model are preserved.
+
+5. This helper handles columns inside columnDefs.
+   autoGroupColumnDef is separate and is not changed.
+
+6. For client-side rowData, AG Grid builds the value list
+   from loaded rows. Server-side/infinite row models need
+   separately supplied distinct values and backend filtering.
+
+7. Keep your existing Enterprise module/license setup.
+   Since your checkbox filter already opens, do not add
+   duplicate module registration just for this helper.
+
+8. I have not compiled this against your project's installed
+   AG Grid version.
+*/
