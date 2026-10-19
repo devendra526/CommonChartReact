@@ -1,0 +1,18 @@
+const footer = document.querySelector('.lmn-footer');
+
+if (!footer) {
+  console.log('Footer not found');
+} else {
+  const css = getComputedStyle(footer);
+
+  console.table({
+    hasIcgdsAncestor: Boolean(footer.closest('.icgds')),
+    display: css.display,
+    flexDirection: css.flexDirection,
+    fontSize: css.fontSize,
+    marginTop: css.marginTop,
+    spacingToken: css.getPropertyValue('--spacing-two-and-a-half-x').trim(),
+    fontToken: css.getPropertyValue('--font-size-body-xs').trim(),
+    colorToken: css.getPropertyValue('--text_weak').trim(),
+  });
+}
