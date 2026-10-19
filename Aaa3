@@ -1,0 +1,17 @@
+import type { ReactNode } from 'react';
+import {
+  CssProvider,
+  ThemeProvider,
+} from '@citi-icg-172888/icgds-react';
+
+export function DesignSystemProvider({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <CssProvider>
+      <ThemeProvider>
+        {children}
+      </ThemeProvider>
+    </CssProvider>
+  );
+}
