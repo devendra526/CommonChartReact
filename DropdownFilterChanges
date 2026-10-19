@@ -1,0 +1,26 @@
+/* Leave space for the caret on the right */
+.select.select {
+  position: relative;
+  padding-right: 32px;
+}
+
+/* Down caret — popup closed */
+.select.select::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-70%) rotate(45deg);
+  transition: transform 160ms ease;
+  pointer-events: none;
+}
+
+/* Up caret — popup open */
+.select.select[aria-expanded="true"]::after,
+.select.select:has([aria-expanded="true"])::after {
+  transform: translateY(-30%) rotate(225deg);
+}
