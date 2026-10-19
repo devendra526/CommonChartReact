@@ -1,0 +1,23 @@
+import styles from './Footer.module.css';
+
+type PageFooterProps = {
+  applicationName?: string;
+};
+
+export default function PageFooter({
+  applicationName = 'Institutional Credit Risk',
+}: Readonly<PageFooterProps>) {
+  return (
+    <footer className={styles.pageFooter}>
+      <span>
+        © {new Date().getFullYear()} Citigroup Inc.
+        {applicationName ? ` · ${applicationName}` : ''}
+        {' · '}
+      </span>
+
+      <strong>
+        CONFIDENTIAL — FOR INTERNAL USE ONLY
+      </strong>
+    </footer>
+  );
+}
