@@ -1,0 +1,3 @@
+Get-ChildItem .\node_modules\@citi-icg-172888 -Recurse -Filter *.css |
+  Select-String -SimpleMatch 'lmn-footer' -List |
+  Select-Object -ExpandProperty Path
