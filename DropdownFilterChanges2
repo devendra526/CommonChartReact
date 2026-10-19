@@ -1,0 +1,47 @@
+/* Wider dropdown button; grows for longer selected values */
+.select.select {
+  width: max-content;
+  min-width: 220px;
+  max-width: none;
+  box-sizing: border-box;
+  padding-left: 12px;
+  padding-right: 34px; /* Space for caret */
+  flex-shrink: 0;
+}
+
+/* Allow selected text to use its natural width */
+.selectInner.selectInner {
+  width: auto;
+  min-width: 0;
+  flex: 1 0 auto;
+}
+
+.select.select :global(.lmn-select-button) {
+  width: auto;
+  flex: 1 0 auto;
+}
+
+.select.select :global(.lmn-select-value) {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* Popup expands based on its longest option */
+.popup.popup {
+  width: max-content;
+  min-width: 220px;
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Keep normal options on one line.
+   Wrap only if an option is wider than the viewport limit. */
+.popup.popup li,
+.popup.popup [role="option"] {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
