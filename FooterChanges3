@@ -1,0 +1,154 @@
+/* PAGE FOOTER */
+
+.pageFooter {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding: 12px 20px;
+  border-top: 1px solid #dce3eb;
+  background: #f8fafc;
+  color: #64748b;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.pageFooter strong {
+  color: #475569;
+  font-weight: 600;
+}
+
+/* SIDEBAR FOOTER */
+
+.sideFooter {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding: 16px 12px 12px;
+  color: #d6e1eb;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Note and collapse button */
+
+.noteRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  flex: 1;
+  gap: 8px;
+  min-width: 0;
+  color: #b5c4d1;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+.note .icon {
+  margin-top: 2px;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Support and branding */
+
+.linksRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.support,
+.poweredBy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.support {
+  min-height: 28px;
+  color: #edf4fb;
+  text-decoration: none;
+}
+
+.support:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.poweredBy {
+  color: #b5c4d1;
+}
+
+.toggle:focus-visible,
+.support:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Collapsed sidebar */
+
+.sideFooter[data-collapsed='true'] {
+  padding: 12px 6px;
+}
+
+.sideFooter[data-collapsed='true'] .noteRow {
+  justify-content: center;
+}
+
+.sideFooter[data-collapsed='true'] .toggle {
+  margin: 0;
+}
+
+.sideFooter[data-collapsed='true'] .linksRow {
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media (max-width: 600px) {
+  .pageFooter {
+    padding: 10px 12px;
+  }
+}
