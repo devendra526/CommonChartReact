@@ -1,0 +1,119 @@
+.pageFooter {
+  width: 100%;
+  min-width: 0;
+  flex-shrink: 0;
+  margin-top: 32px;
+  padding: 0 20px 16px;
+  box-sizing: border-box;
+}
+
+.pageFooter :global(.lmn-footer) {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 0;
+  padding: 16px 0 0;
+  box-sizing: border-box;
+  background: transparent;
+  color: #59636f;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* Links across the top, wrapping on smaller screens. */
+.pageFooter :global(.lmn-footer-links) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 0;
+  margin: 0;
+  padding: 0;
+}
+
+.pageFooter :global(.lmn-footer-item),
+.pageFooter :global(.lmn-footer-item):visited {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 10px 0 0;
+  padding: 0 10px 0 0;
+  border: 0;
+  border-right: 1px solid #cbd1d8;
+  color: #4b5563;
+  font: inherit;
+  line-height: 1.4;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.pageFooter :global(.lmn-footer-item):last-child {
+  margin-right: 0;
+  padding-right: 0;
+  border-right: 0;
+}
+
+.pageFooter :global(.lmn-footer-item):hover {
+  color: #005a9c;
+  text-decoration: underline;
+}
+
+.pageFooter :global(.lmn-footer-item):focus-visible {
+  outline: 2px solid #005a9c;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+/* Horizontal separator below the links. */
+.pageFooter :global(.lmn-footer-divider) {
+  display: block;
+  width: 100%;
+  height: 1px;
+  margin: 12px 0;
+  padding: 0;
+  border: 0;
+  background: #dce1e7;
+}
+
+/* Description supplied by GlobalFooter. */
+.pageFooter :global(.lmn-footer-copy) {
+  margin: 0 0 10px;
+  padding: 0;
+  color: #59636f;
+  font: inherit;
+  overflow-wrap: anywhere;
+}
+
+/* Citi logo and copyright on the same row. */
+.pageFooter :global(.lmn-footer-logo) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0;
+  padding: 0;
+  color: #59636f;
+  font: inherit;
+}
+
+.pageFooter :global(.lmn-footer-logo) img {
+  display: block;
+  width: 36px;
+  height: auto;
+  max-width: 100%;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.pageFooter :global(.lmn-footer-copy) p,
+.pageFooter :global(.lmn-footer-logo) p {
+  margin: 0;
+  font: inherit;
+}
+
+@media (max-width: 600px) {
+  .pageFooter {
+    margin-top: 24px;
+    padding: 0 12px 16px;
+  }
+}
