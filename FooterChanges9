@@ -1,0 +1,71 @@
+import '@testing-library/jest-dom/vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
+
+import PageFooter from './PageFooter';
+
+afterEach(cleanup);
+
+const expectedLinks = [
+  {
+    name: 'Terms and Conditions',
+    href: 'https://secure.citi.com/brandcentral/site/assets/downloads/footer/citi_brand_central_terms_and_conditions.pdf',
+  },
+  {
+    name: 'Privacy',
+    href: 'https://secure.citi.com/brandcentral/site/assets/downloads/footer/citi_brand_central_privacy_policy.pdf',
+  },
+  {
+    name: 'Contact Us',
+    href: 'https://secure.citi.com/brandcentral/site/contact',
+  },
+  {
+    name: 'Our Mission and Value Proposition',
+    href: 'https://www.citigroup.com/citi/about/mission-and-value-proposition.html',
+  },
+];
+
+describe('PageFooter', () => {
+  it.each(expectedLinks)(
+    'renders the $name link with the correct destination',
+    ({ name, href }) => {
+      render(<PageFooter />);
+
+      expect(
+        screen.getByRole('link', { name }),
+      ).toHaveAttribute('href', href);
+    },
+  );
+
+  it('renders all four footer links', () => {
+    render(<PageFooter />);
+
+    for (const { name } of expectedLinks) {
+      expect(
+        screen.getByRole('link', { name }),
+      ).toBeVisible();
+    }
+  });
+
+  it('renders the Citi logo', () => {
+    const { container } = render(<PageFooter />);
+
+    const logo = container.querySelector(
+      '.lmn-footer-logo img',
+    );
+
+    expect(logo).toBeInTheDocument();
+    expect(logo).toHaveAttribute(
+      'src',
+      expect.stringContaining('Citi_Logo.svg'),
+    );
+  });
+
+  it('renders the copyright information', () => {
+    render(<PageFooter />);
+
+    expect(
+      screen.getByText(/Copyright.*Citigroup Inc/i),
+    ).toBeVisible();
+  });
+});
