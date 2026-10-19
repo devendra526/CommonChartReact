@@ -1,0 +1,15 @@
+      </Menu>
+
+      <SideNavFooter
+        collapsed={collapsed}
+        onToggle={onToggle}
+        footerNote={
+          footerNote ??
+          'Intercompany and intracompany exposures are excluded from the figures presented'
+        }
+        supportEmail="YOUR_SUPPORT_EMAIL"
+        poweredBy="Titan"
+      />
+    </aside>
+  );
+}
