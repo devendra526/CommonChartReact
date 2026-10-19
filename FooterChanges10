@@ -1,0 +1,214 @@
+import '@testing-library/jest-dom/vitest';
+import type { ComponentProps } from 'react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
+import {
+  afterEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
+
+import SideNavFooter from './SideNavFooter';
+
+afterEach(cleanup);
+
+type Props = ComponentProps<typeof SideNavFooter>;
+
+const footerNote =
+  'Intercompany and intracompany exposures are excluded from the figures presented';
+
+const supportEmail = 'support@example.com';
+
+function setup(overrides: Partial<Props> = {}) {
+  const props: Props = {
+    collapsed: false,
+    onToggle: vi.fn(),
+    supportEmail,
+    footerNote,
+    ...overrides,
+  };
+
+  return {
+    ...render(<SideNavFooter {...props} />),
+    props,
+  };
+}
+
+describe('SideNavFooter', () => {
+  it('shows the note and Support text when expanded', () => {
+    setup();
+
+    expect(screen.getByText(footerNote)).toBeVisible();
+    expect(screen.getByText('Support')).toBeVisible();
+  });
+
+  it('hides the note and Support text when collapsed', () => {
+    setup({ collapsed: true });
+
+    expect(
+      screen.queryByText(footerNote),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByText('Support'),
+    ).not.toBeInTheDocument();
+
+    // The icon-only support link remains accessible.
+    expect(
+      screen.getByRole('link', { name: 'Email support' }),
+    ).toBeVisible();
+  });
+
+  it.each([false, true])(
+    'uses the correct support destination when collapsed=%s',
+    (collapsed) => {
+      setup({ collapsed });
+
+      const link = screen.getByRole('link', {
+        name: 'Email support',
+      });
+
+      expect(link).toHaveAttribute(
+        'href',
+        `mailto:${supportEmail}`,
+      );
+
+      expect(link).toHaveAttribute(
+        'title',
+        `Support: ${supportEmail}`,
+      );
+    },
+  );
+
+  it('renders without an optional footer note', () => {
+    setup({ footerNote: undefined });
+
+    expect(
+      screen.queryByText(footerNote),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Collapse sidebar',
+      }),
+    ).toBeVisible();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Email support',
+      }),
+    ).toBeVisible();
+  });
+
+  it('accepts JSX as the footer note', () => {
+    setup({
+      footerNote: <strong>Internal use only</strong>,
+    });
+
+    expect(
+      screen.getByText('Internal use only'),
+    ).toBeVisible();
+  });
+
+  it.each([
+    {
+      collapsed: false,
+      label: 'Collapse sidebar',
+      expanded: 'true',
+    },
+    {
+      collapsed: true,
+      label: 'Expand sidebar',
+      expanded: 'false',
+    },
+  ])(
+    'provides the correct toggle attributes when collapsed=$collapsed',
+    ({ collapsed, label, expanded }) => {
+      setup({ collapsed });
+
+      const button = screen.getByRole('button', {
+        name: label,
+      });
+
+      expect(button).toHaveAttribute(
+        'aria-expanded',
+        expanded,
+      );
+      expect(button).toHaveAttribute('title', label);
+      expect(button).toHaveAttribute('type', 'button');
+    },
+  );
+
+  it.each([false, true])(
+    'calls onToggle once when clicked with collapsed=%s',
+    (collapsed) => {
+      const { props } = setup({ collapsed });
+
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: collapsed
+            ? 'Expand sidebar'
+            : 'Collapse sidebar',
+        }),
+      );
+
+      expect(props.onToggle).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('updates when the parent changes the collapsed prop', () => {
+    const { props, rerender } = setup();
+
+    rerender(
+      <SideNavFooter {...props} collapsed={true} />,
+    );
+
+    expect(
+      screen.queryByText(footerNote),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Expand sidebar',
+      }),
+    ).toHaveAttribute('aria-expanded', 'false');
+
+    rerender(
+      <SideNavFooter {...props} collapsed={false} />,
+    );
+
+    expect(screen.getByText(footerNote)).toBeVisible();
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Collapse sidebar',
+      }),
+    ).toHaveAttribute('aria-expanded', 'true');
+
+    expect(props.onToggle).not.toHaveBeenCalled();
+  });
+
+  it('updates the support link when the email changes', () => {
+    const { props, rerender } = setup();
+
+    rerender(
+      <SideNavFooter
+        {...props}
+        supportEmail="new-support@example.com"
+      />,
+    );
+
+    expect(
+      screen.getByRole('link', { name: 'Email support' }),
+    ).toHaveAttribute(
+      'href',
+      'mailto:new-support@example.com',
+    );
+  });
+});
