@@ -1,0 +1,48 @@
+/* Dashboard and footer must stack vertically */
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Dashboard takes the full available content width */
+.pageBody {
+  display: block;
+  flex: 1 0 auto;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+
+
+
+.pageFooter {
+  box-sizing: border-box;
+  display: block;
+  position: static;
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 100%;
+  margin-top: auto;
+  padding: 10px 16px;
+
+  border-top: 1px solid #dce3eb;
+  background: #f8fafc;
+  color: #64748b;
+
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.pageFooter strong {
+  color: #475569;
+  font-weight: 600;
+}
