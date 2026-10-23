@@ -1,0 +1,34 @@
+const mergedOptions = useMemo<Highcharts.Options>(() => {
+  // Preserve existing axis settings and allow a smaller zoom range.
+  const applyZoomSettings = (
+    axis: Highcharts.XAxisOptions
+  ): Highcharts.XAxisOptions => ({
+    ...axis,
+    minRange: 1,
+    startOnTick: false,
+    endOnTick: false,
+  });
+
+  return {
+    ...options,
+
+    legend: {
+      ...(options.legend ?? {}),
+      enabled: false,
+    },
+
+    xAxis: Array.isArray(options.xAxis)
+      ? options.xAxis.map(applyZoomSettings)
+      : applyZoomSettings(options.
+xAxis ?? {}),
+
+    chart: {
+      ...(options.chart ?? {}),
+
+      zooming: {
+        ...(options.chart?.zooming ?? {}),
+        type: zoomEnabled ? zoomType : undefined,
+      },
+    },
+  };
+}, [options, zoomEnabled, zoomType]);
