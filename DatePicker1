@@ -1,0 +1,64 @@
+const [activeDatePicker, setActiveDatePicker] =
+  useState<string | null>(null);
+
+const handleDatePickerOpenChange = (
+  pickerId: string,
+  nextOpen: boolean
+) => {
+  setActiveDatePicker(current =>
+    nextOpen
+      ? pickerId
+      : current === pickerId
+        ? null
+        : current
+  );
+};
+
+
+open={activeDatePicker === f.id}
+onOpenChange={(nextOpen) =>
+  handleDatePickerOpenChange(f.id, nextOpen)
+}
+
+open?: boolean;
+onOpenChange?: (open: boolean) => void;
+
+
+const pickerRef = useRef<HTMLWcDatePickerElement>(null);
+
+useEffect(() => {
+  const picker = pickerRef.current;
+
+  if (!picker || open === undefined) return;
+
+  const nextOpen = editable && open;
+
+  if (picker.open !== nextOpen) {
+    picker.open = nextOpen;
+  }
+}, [open, editable]);
+
+
+<DatePicker
+  ref={pickerRef}
+  className={styles.picker}
+  value={value ? fromIso(value) : undefined}
+  disabled={!editable}
+  allowClear={false}
+  autoClose
+  disabledDate={
+    max
+      ? (date: Date) => toIso(date) > max
+      : undefined
+  }
+  triggerElement={pill}
+  onOpenChange={(nextOpen: boolean) => {
+    onOpenChange?.(editable && nextOpen);
+  }}
+  onValueChange={(date: Date) => {
+    if (!date || !editable) return;
+
+    onChange?.(toIso(date));
+    onOpenChange?.(false);
+  }}
+/>
