@@ -1,0 +1,122 @@
+import { useEffect, useRef } from "react";
+
+// Replace your existing DatePill function with this.
+export function DatePill({
+  label,
+  value,
+  icon = "calendar",
+  onChange,
+  disabled,
+  disabledHint,
+  max,
+}: Readonly<DatePillProps>) {
+  const editable = !!onChange && !disabled;
+
+  const pickerRef = useRef<HTMLWcDatePickerElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!editable) return;
+
+    const handleDatePillClick = (event: MouseEvent) => {
+      // composedPath also handles events crossing a shadow boundary.
+      const clickedTrigger = event.composedPath().find(
+        (element): element is HTMLButtonElement =>
+          element instanceof HTMLButtonElement &&
+          element.hasAttribute("data-date-pill-trigger")
+      );
+
+      // Ignore calendar-date clicks, other controls and our own trigger.
+      if (!clickedTrigger || clickedTrigger === triggerRef.current) {
+        return;
+      }
+
+      const picker = pickerRef.current;
+      if (!picker) return;
+
+      // Another DatePill was clicked: close this calendar.
+      // Use the component's method instead of hiding DOM with CSS.
+      const closeCalendar = async () => {
+        try {
+          await picker.close();
+        } catch (error) {
+          console.error(`Unable to close ${label} calendar`, error);
+        }
+      };
+
+      void closeCalendar();
+    };
+
+    // Capture runs before the clicked DatePicker's trigger handler.
+    // Click also covers native button activation with Enter/Space.
+    document.addEventListener("click", handleDatePillClick, true);
+
+    return () => {
+      document.removeEventListener("click", handleDatePillClick, true);
+    };
+  }, [editable, label]);
+
+  const face = (
+    <>
+      <Icon name={icon} />
+
+      <span className={styles.pillText}>
+        <span className={styles.pillLabel}>{label}</span>
+
+        <span className={styles.pillValue}>
+          {value ? fmtDisplayDate(value) : "—"}
+        </span>
+      </span>
+    </>
+  );
+
+  // Read-only or disabled pills do not mount a DatePicker.
+  if (!editable) {
+    return (
+      <div
+        className={clsx(styles.pill, disabled && styles.disabled)}
+        title={disabled ? disabledHint : undefined}
+        aria-disabled={disabled || undefined}
+      >
+        {face}
+      </div>
+    );
+  }
+
+  const pill = (
+    <button
+      ref={triggerRef}
+      type="button"
+      data-date-pill-trigger=""
+      className={clsx(styles.pill, styles.editable)}
+      title={`Change ${label}`}
+      aria-label={`${label}, ${
+        value ? fmtDisplayDate(value) : "not set"
+      }`}
+    >
+      {face}
+    </button>
+  );
+
+  return (
+    <DatePicker
+      ref={pickerRef}
+      className={styles.picker}
+      value={value ? fromIso(value) : undefined}
+      disabled={!editable}
+      allowClear={false}
+      autoClose
+      disabledDate={
+        max
+          ? (date: Date) => toIso(date) > max
+          : undefined
+      }
+      triggerElement={pill}
+      onValueChange={(date: Date) => {
+        if (date) {
+          onChange?.(toIso(date));
+        }
+      }}
+    />
+  );
+}
