@@ -1,0 +1,88 @@
+
+<Menu mode="inline" className={styles.list}>
+  {groups.map((g) => {
+    const visibleItems = getVisibleItems(g.items);
+
+    return (
+      <Menu.ItemGroup
+        key={g.id}
+        className={styles.group}
+        title={g.header && !collapsed ? g.header.label : ''}
+      >
+        {visibleItems.map((it) => {
+          const originalIndex = g.items.findIndex(
+            (item) => item.id === it.id
+          );
+
+          const expandable = hasChildren(g.items, originalIndex);
+          const isExpanded = expandedMenus.has(it.id);
+
+          return (
+            <Menu.Item
+              key={it.id}
+              title={it.label}
+              disabled={it.disabled}
+              selectable={false}
+              className={clsx(
+                styles.item,
+                it.active && styles.active,
+                it.disabled && styles.disabled,
+                it.level === 2 && styles.leaf
+              )}
+              style={cssVars({
+                '--pad': `${collapsed ? 8 : 8 + it.level * 14}px`,
+              })}
+              onClick={() => {
+                if (it.disabled) return;
+
+                if (expandable) {
+                  toggleExpandedMenu(it.id);
+                  return;
+                }
+
+                if (it.navigable) {
+                  onSelect(it);
+                }
+              }}
+              {...(it.active
+                ? { 'aria-current': 'page' as const }
+                : {})}
+            >
+              <span className={styles.ico}>
+                <Icon
+                  name={isIconName(it.icon) ? it.icon : 'dashboard'}
+                />
+              </span>
+
+              {!collapsed && (
+                <>
+                  <span className={styles.label}>
+                    {it.label}
+                  </span>
+
+                  {it.badge ? (
+                    <span
+                      className={styles.badge}
+                      data-tone={it.badge.tone}
+                    >
+                      {it.badge.text}
+                    </span>
+                  ) : null}
+
+                  {expandable && (
+                    <span
+                      className={styles.expandIcon}
+                      aria-hidden="true"
+                    >
+                      {isExpanded ? '▾' : '▸'}
+                    </span>
+                  )}
+                </>
+              )}
+            </Menu.Item>
+          );
+        })}
+      </Menu.ItemGroup>
+    );
+  })}
+</Menu>
