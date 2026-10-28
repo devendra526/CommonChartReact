@@ -1,0 +1,60 @@
+
+const [expandedMenus, setExpandedMenus] = useState<Set<string>>(
+  () => new Set()
+);
+
+// A parent menu has at least one following item at a deeper level.
+const hasChildren = (
+  menuItems: SideNavItem[],
+  index: number
+): boolean =>
+  index < menuItems.length - 1 &&
+  menuItems[index + 1].level > menuItems[index].level;
+
+// Toggle only the selected parent menu.
+const toggleExpandedMenu = (id: string) => {
+  setExpandedMenus((previous) => {
+    const next = new Set(previous);
+
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+
+    return next;
+  });
+};
+
+// Hide descendants of collapsed parent menus.
+const getVisibleItems = (menuItems: SideNavItem[]) => {
+  const visibleItems: SideNavItem[] = [];
+  let hiddenParentLevel: number | null = null;
+
+  menuItems.forEach((item, index) => {
+    if (
+      hiddenParentLevel !== null &&
+      item.level > hiddenParentLevel
+    ) {
+      return;
+    }
+
+    if (
+      hiddenParentLevel !== null &&
+      item.level <= hiddenParentLevel
+    ) {
+      hiddenParentLevel = null;
+    }
+
+    visibleItems.push(item);
+
+    if (
+      hasChildren(menuItems, index) &&
+      !expandedMenus.has(item.id)
+    ) {
+      hiddenParentLevel = item.level;
+    }
+  });
+
+  return visibleItems;
+};
