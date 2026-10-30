@@ -1,0 +1,137 @@
+I want to implement cross-application redirect functionality from sparc-ui to limit-central-ui when a user clicks the Limit ID in the Limits grid.
+
+1. Scope of changes
+
+The primary implementation must be done in the sparc-ui repository.
+
+Use the existing crisp-ui implementation for the Send to HDS functionality as a reference for cross-application navigation patterns, URL construction, environment configuration, and opening a new browser tab, if that code is available in the current workspace.
+
+Do not modify crisp-ui.
+
+Before making any changes, inspect the existing code and identify the minimum files that need modification.
+
+2. First inspect limit-central-ui
+
+Before implementing the redirect, verify whether limit-central-ui already has the logic to accept a Limit ID through its URL and load the corresponding Drill Through page.
+
+Inspect the following:
+
+* The routing configuration for the Drill Through page.
+* The component rendered by that route.
+* Whether the page reads query parameters using URLSearchParams, React Router hooks, or another existing mechanism.
+* Whether it accepts a Limit ID through a query parameter, route parameter, or another supported mechanism.
+* Whether the received Limit ID is used to populate the Limit ID field or initialize the Drill Through page.
+* Whether additional parameters, such as Domain, COB Date, or other context, are required to load the page correctly.
+* Whether the page already supports direct navigation or refresh with URL parameters.
+
+If the limit-central-ui repository is accessible in the current workspace, inspect its implementation directly. Otherwise, inspect any available route configuration, documentation, or existing navigation references. Do not assume that the destination supports the parameter without evidence.
+
+Decision based on the inspection
+
+Case A: Destination already supports the Limit ID URL parameter
+
+Do not modify limit-central-ui. Implement the redirect entirely in sparc-ui, using the exact route and parameter name expected by the destination.
+
+Case B: Destination does not support the Limit ID URL parameter
+
+Complete the source-side implementation in sparc-ui as far as possible. Clearly identify the missing destination-side functionality and explain the minimum change required in limit-central-ui to read the parameter and initialize the Drill Through page.
+
+Do not silently assume that passing a query parameter will automatically populate the destination page.
+
+3. Inspect sparc-ui
+
+Locate the Limits page and its grid implementation.
+
+Identify:
+
+* The exact file containing the Limits grid.
+* The column definition for the Limit ID column.
+* The actual field/property containing the Limit ID in each row.
+* The grid library and its existing cell-rendering conventions.
+* Existing utilities for application URLs, environment configuration, navigation, and opening new tabs.
+* Any existing cross-application redirect implementation in sparc-ui that can be reused.
+
+Do not guess file names, field names, URL paths, or configuration keys. Determine them from the codebase.
+
+4. Implement clickable Limit ID navigation in sparc-ui
+
+When the user clicks a Limit ID in the Limits grid:
+
+1. Retrieve the Limit ID from the clicked row.
+2. Construct the URL for the verified Drill Through route in limit-central-ui.
+3. Pass the Limit ID using the exact parameter name and format expected by the destination.
+4. Include any additional required parameters only when their correct values are available from the source application.
+5. Open the destination in a new browser tab, following the existing navigation conventions.
+6. Make only the Limit ID clickable, with styling consistent with the existing UI.
+7. Prevent navigation when the Limit ID is null, undefined, or empty.
+8. Encode URL parameters safely using URLSearchParams or an equivalent supported approach.
+
+Use the existing grid library’s supported cell renderer or click handler. If the grid uses AG Grid, follow the project’s existing AG Grid patterns.
+
+Preserve existing sorting, filtering, selection, row interactions, tooltips, and other grid functionality.
+
+5. Construct the destination URL correctly
+
+Use the actual URL and routing configuration discovered during inspection.
+
+* Resolve the limit-central-ui base URL from existing environment configuration or application URL mappings.
+* Reuse an existing URL-building or navigation utility if available.
+* Do not hardcode localhost URLs or environment-specific hostnames in the grid component.
+* Do not invent the destination route or query parameter names.
+* Do not assume that limitId is the correct parameter name until it has been verified.
+* Ensure that the destination can receive the parameter in the format it expects.
+
+Follow the same general approach as the existing crisp-ui Send to HDS implementation, but adapt it to the actual requirements of the Limits grid.
+
+6. Error handling and security
+
+* Validate the Limit ID before navigating.
+* Use safe URL parameter encoding.
+* If window.open is used, follow the existing project security conventions, including appropriate noopener and noreferrer options.
+* Handle missing application configuration using existing error-handling conventions.
+* Do not introduce new dependencies.
+* Do not refactor unrelated components or change the existing page layout.
+
+7. Testing
+
+Add or update tests using the testing framework already configured in sparc-ui.
+
+Cover the following cases:
+
+* Clicking a valid Limit ID opens the correct limit-central-ui URL.
+* The correct Limit ID is passed using the destination’s expected parameter name.
+* Special characters are encoded correctly.
+* Missing or empty Limit IDs do not trigger navigation.
+* Clicking other columns does not trigger the redirect.
+* Existing grid interactions remain unaffected.
+
+If destination-side support is missing, explain how to verify that the destination reads the parameter and initializes the Drill Through page correctly.
+
+8. Implementation workflow
+
+Follow this order:
+
+1. Inspect the relevant code in sparc-ui.
+2. Inspect the existing crisp-ui Send to HDS implementation if available.
+3. Verify whether limit-central-ui already accepts and processes a Limit ID from its URL.
+4. Report the exact destination route, parameter name, and any additional required parameters discovered.
+5. Identify the minimum files to change in sparc-ui.
+6. Implement the source-side changes.
+7. Make destination-side changes only if the existing implementation cannot accept the required URL parameter, and clearly separate those changes from the sparc-ui implementation.
+8. Add or update tests and provide verification steps.
+
+9. Expected output
+
+Provide:
+
+* A brief explanation of the existing destination-side URL handling.
+* The verified destination route and parameter names.
+* The exact files to modify in sparc-ui.
+* The complete updated code for each modified source file or the complete replacement sections.
+* Any required destination-side changes, clearly marked as conditional.
+* Tests and commands to run.
+* A short explanation of how to verify the end-to-end redirect.
+
+Keep the implementation minimal, reuse existing project conventions, and avoid unrelated changes.
+
+Do not claim that the implementation is complete until the destination URL handling has been verified and the required code changes have been identified.
