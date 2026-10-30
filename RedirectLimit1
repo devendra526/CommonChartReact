@@ -1,0 +1,29 @@
+const handleCellClick = (params) => {
+  // Handle only clicks on the Limit ID column
+  if (params.colDef.field !== 'limitId') {
+    return;
+  }
+
+  const limitId = params.value;
+
+  // Prevent navigation if Limit ID is missing
+  if (limitId === null || limitId === undefined || limitId === '') {
+    return;
+  }
+
+  // Replace these with the actual configuration and route
+  // verified in limit-central-ui
+  const baseUrl = import.meta.env.VITE_LIMIT_CENTRAL_UI_URL;
+  const drillThroughPath = '/#/drill-through';
+
+  if (!baseUrl) {
+    console.error('Limit Central UI URL is not configured');
+    return;
+  }
+
+  const url = new URL(drillThroughPath, baseUrl);
+  url.searchParams.set('limitId', String(limitId));
+
+  // Open Limit Central UI in a new tab
+  window.open(url.toString(), '_blank', 'noopener,noreferrer');
+};
