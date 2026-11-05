@@ -1,0 +1,195 @@
+Task: Replace Custom Limit Name MultiSelect with ICGDS MultiSelect Component
+
+I want to replace the existing custom multi-select dropdown implementation in the Limit Summary screen with the standard ICGDS Select component, using its Multiple Mode functionality.
+
+I have two reference implementations:
+
+1. ICGDS Multiple Mode: The existing standard component demonstrated in the ICGDS component documentation.
+2. Current Limit Summary implementation: The existing custom dropdown with search functionality, checkboxes, an ALL option, and multi-selection.
+
+Use the existing ICGDS component implementation as the reference and migrate the Limit Name filter to use it.
+
+1. First, analyze the existing implementation
+
+Before making any changes:
+
+* Locate the Limit Summary component.
+* Identify the existing Limit Name dropdown implementation.
+* Understand how the current search functionality works.
+* Identify how selected values are maintained in state.
+* Identify how the ALL selection works.
+* Check how selected values trigger API calls or grid filtering.
+* Identify any existing CSS or custom logic associated with this dropdown.
+* Inspect the ICGDS Select component documentation and actual implementation.
+
+ICGDS documentation reference:
+/icgds/react/components/select/overview#SimpleMultiSelectMode
+
+Check the actual component props, supported features, styling capabilities, and event handlers before implementing.
+
+Do not assume unsupported props or introduce another third-party library.
+
+2. Replace with ICGDS Multiple Mode
+
+Use the standard ICGDS Select component with its Multiple Mode.
+
+Expected functionality:
+
+* Multiple values should be selectable.
+* Each option should have a checkbox.
+* Search functionality should be available.
+* Existing selected values should be retained when opening the dropdown.
+* Support clearing selected values.
+* Preserve the existing Limit Summary filtering and API integration.
+
+Use the actual supported ICGDS properties, following its documentation. The implementation may use properties such as:
+
+* mode=“multiple”
+* placeholder
+* allowClear
+* autoCollapseTags
+* highlightOption
+* defaultValue / value
+* onChange
+
+Verify the exact API and controlled/uncontrolled behavior before using them.
+
+3. Configurable selected-value display (Important)
+
+I want the flexibility to decide whether selected values are displayed as tags or not.
+
+Implement a configurable property:
+
+showSelectedAsTags
+
+Expected behavior:
+
+When showSelectedAsTags = true:
+
+* Display selected values as tags inside the Select input.
+* Avoid excessive expansion when multiple values are selected.
+* Use the ICGDS auto-collapse functionality if supported.
+
+When showSelectedAsTags = false:
+
+* Do not display individual selected-value tags.
+* Keep the dropdown input compact.
+* Display a suitable placeholder or selected count if supported by the component.
+* The selected checkboxes must still remain checked when reopening the dropdown.
+* Do not lose selected values from the internal state.
+
+Make this configurable rather than hardcoding either behavior.
+
+4. Configurable ALL option (Important)
+
+The current implementation has an ALL checkbox.
+
+I want a configurable property:
+
+showAllOption
+
+Expected behavior:
+
+* When true, display ALL as the first option in the dropdown.
+* When false, do not display ALL in the dropdown.
+* ALL should not be treated as a normal Limit Name value.
+* Selecting ALL should select all available Limit Names.
+* Deselecting ALL should clear the selection.
+* If all individual values are selected manually, handle the ALL checkbox state appropriately.
+* When searching, ALL should remain a separate control and should not be treated as a regular search result.
+* Verify that selecting and deselecting individual options works correctly after using ALL.
+
+5. Search functionality
+
+Preserve the existing search experience.
+
+Requirements:
+
+* Search input should be available at the top of the dropdown.
+* Search should filter options based on the entered text.
+* Search should be case-insensitive.
+* Search should support partial matches.
+* The search input should remain usable while selecting multiple options.
+* Search should not clear previously selected values.
+* Clearing the search should restore the complete option list.
+* ALL should be handled separately according to the showAllOption configuration.
+
+If the ICGDS Select component already supports search internally, use that functionality instead of implementing a duplicate search mechanism.
+
+6. UI and styling
+
+Follow the standard ICGDS design system.
+
+The dropdown should:
+
+* Match the existing Limit Summary filter styling.
+* Have consistent font sizes, spacing, checkbox alignment, and border radius.
+* Have a suitable dropdown width.
+* Support vertical scrolling for a large number of Limit Names.
+* Keep long Limit Names readable.
+* Avoid clipping or overlapping with the grid.
+* Work correctly within the existing dark-blue filter toolbar.
+
+Do not introduce unnecessary custom CSS if ICGDS already provides the required styling.
+
+7. Preserve existing functionality
+
+This is a component migration, not a functional redesign.
+
+Ensure:
+
+* Existing Limit Name filter behavior remains unchanged.
+* Existing API request parameters remain unchanged.
+* Selected values are passed in the same format expected by the backend.
+* Existing default selection (ALL) continues to work.
+* Region and Tier filters are unaffected.
+* Other Limit Summary filters are unaffected.
+* No unnecessary API calls are introduced.
+* No regression in grid data or filtering behavior.
+
+8. Expected implementation structure
+
+Keep the implementation reusable and configurable.
+
+For example, the configuration should conceptually support:
+
+showSelectedAsTags = true / false
+
+showAllOption = true / false
+
+Do not create a completely new dropdown component if the existing ICGDS Select component can handle this functionality directly.
+
+If a small wrapper is necessary, keep it reusable and isolated.
+
+9. Testing and validation
+
+After implementation, verify these scenarios:
+
+1. Open the dropdown and verify the options are displayed correctly.
+2. Select multiple Limit Names.
+3. Verify selected values are displayed as tags when enabled.
+4. Disable tags and verify the input remains compact.
+5. Verify previously selected checkboxes remain checked.
+6. Verify ALL selects every available Limit Name.
+7. Verify manually selecting all values updates the ALL checkbox appropriately.
+8. Disable the ALL option and verify normal multi-selection works.
+9. Search for a partial Limit Name.
+10. Select multiple options while searching.
+11. Clear search and verify the complete list is restored.
+12. Clear selected values using the clear functionality.
+13. Verify the existing API request and grid filtering behavior.
+14. Verify there are no console errors or React warnings.
+
+Important implementation instructions
+
+* Inspect the actual ICGDS Select source code and documentation first.
+* Reuse the existing ICGDS component rather than recreating its functionality.
+* Do not modify shared ICGDS library code.
+* Avoid changing unrelated components.
+* Do not break the existing Limit Summary layout.
+* Follow the existing project coding conventions and TypeScript types.
+* Provide the complete updated code for the affected files.
+* Explain which files were modified and why.
+* Highlight any ICGDS limitation that requires a small custom wrapper or additional logic.
+
+Implement the changes after completing the analysis.
