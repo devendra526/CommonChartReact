@@ -1,0 +1,21 @@
+Hi Vijay,
+
+Please find below my weekly development updates:
+
+1. Cross-Application Redirect Functionality (SPARC – Current Exposure to LC Drill-Through Tab)
+
+* SPARC: Implemented cell-click functionality to open the LC URL in a new browser tab.
+* LC: Updated the drill-through implementation to support the redirect URL.
+
+2. MultiSelect Component – UI/UX Enhancements
+
+* Updated the MultiSelect component look and feel.
+* Improved the selection experience and overall UI consistency.
+
+3. Highcharts Upgrade
+
+* Upgraded Highcharts to version 13.1.1 in the crisp-ui-component.
+* Completed the verification in Crisp UI.
+
+Regards,
+Devendra Chaudhari
